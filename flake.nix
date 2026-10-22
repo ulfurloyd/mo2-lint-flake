@@ -24,6 +24,24 @@
         format = "other";
         dontBuild = true;
 
+        postBuild = ''
+          pyinstaller --clean --noconfirm --onefile \
+            --name nxm-handler \
+            --paths src \
+            --hidden-import find_heroic_install \
+            --hidden-import protontricks \
+            --hidden-import pydantic_core \
+            --add-data "src/nxm-handler:src" \
+            --add-data "src/shared:src/shared" \
+            --runtime-hook "build/runtime_hooks.py" \
+            --additional-hooks-dir "build/hooks" \
+            src/nxm-handler/__init__.py
+        '';
+
+        nativeBuildInputs = [
+          python.pkgs.pyinstaller
+        ];
+
         postPatch = ''
           substituteInPlace src/mo2-lint/__init__.py \
             --replace-fail \
@@ -31,7 +49,9 @@
               '        edit_file.unlink(missing_ok=True)
                   copy2(tweaks_file, edit_file)
                   edit_file.chmod(0o644)'
+          patch -p1 < ${./protontricks.patch}
         '';
+
         dependencies = with python.pkgs; [
           certifi
           click
@@ -52,7 +72,12 @@
           "--prefix"
           "PATH"
           ":"
-          "${pkgs.protontricks}/bin"
+          (pkgs.lib.makeBinPath [
+            pkgs.protontricks
+            pkgs.p7zip
+            pkgs.cabextract
+            pkgs.winetricks
+          ])
         ];
 
         installPhase = ''

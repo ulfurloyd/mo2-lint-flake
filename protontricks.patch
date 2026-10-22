@@ -1,0 +1,16 @@
+--- a/src/mo2-lint/util/wine/protontricks.py
++++ b/src/mo2-lint/util/wine/protontricks.py
+@@ -163,14 +163,7 @@
+             base_command = [sys.executable]
+         else:
+-            base_command = [
+-                sys.executable,
+-                "-c",
+-                (
+-                    "import sys; from shared import protontricks_arm64; protontricks_arm64.apply(); "
+-                    "from protontricks.cli.main import main as pt; pt(sys.argv[1:])"
+-                ),
+-            ]
++            base_command = ["protontricks"]
+
+         proc = subprocess.run(
