@@ -35,13 +35,12 @@
         dependencies = with python.pkgs; [
           certifi
           click
-          python-dotenv
           inquirerpy
           loguru
           packaging
           patool
           psutil
-          pydantic
+          pydantic-core
           pyyaml
           requests
           send2trash
