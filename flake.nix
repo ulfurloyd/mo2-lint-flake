@@ -8,7 +8,7 @@
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
-      python = pkgs.python313;
+      python = pkgs.python314;
       src = pkgs.fetchFromGitHub {
         owner = "Furglitch";
         repo = "modorganizer2-linux-installer";
@@ -22,12 +22,15 @@
         version = "7.0.3";
         inherit src;
         format = "other";
-        dontBuild = true;
+        dontBuild = false;
 
-        postBuild = ''
+        buildPhase = ''
+          runHook preBuild
+
           pyinstaller --clean --noconfirm --onefile \
             --name nxm-handler \
             --paths src \
+            --paths ${pkgs.protontricks}/lib/python3.14/site-packages \
             --hidden-import find_heroic_install \
             --hidden-import protontricks \
             --hidden-import pydantic_core \
@@ -36,6 +39,8 @@
             --runtime-hook "build/runtime_hooks.py" \
             --additional-hooks-dir "build/hooks" \
             src/nxm-handler/__init__.py
+
+          runHook postBuild
         '';
 
         nativeBuildInputs = [
@@ -59,6 +64,7 @@
           loguru
           packaging
           patool
+          pillow
           psutil
           pydantic-core
           pyyaml
