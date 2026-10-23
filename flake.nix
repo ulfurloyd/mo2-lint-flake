@@ -23,6 +23,7 @@
         inherit src;
         format = "other";
         dontBuild = false;
+        dontStrip = true;
 
         buildPhase = ''
           runHook preBuild
@@ -89,6 +90,12 @@
         installPhase = ''
           mkdir -p $out/lib/mo2-lint $out/bin
           cp -r . $out/lib/mo2-lint
+          cp -r "$out/lib/mo2-lint/src/steam-proton-wrapper" \
+            "$out/lib/mo2-lint/steam-proton-wrapper"
+
+          install -Dm755 \
+            ${./assets/mo2-redirector.exe} \
+            $out/lib/mo2-lint/dist/mo2-redirector.exe
 
           cat > $out/bin/mo2-lint <<EOF
           #!${python}/bin/python3
