@@ -55,6 +55,12 @@
               '        edit_file.unlink(missing_ok=True)
                   copy2(tweaks_file, edit_file)
                   edit_file.chmod(0o644)'
+          substituteInPlace src/nxm-handler/__init__.py \
+            --replace-fail \
+              '            cmdline = p.cmdline()' \
+              '            cmdline = p.cmdline()
+                      if any("modorganizer.exe" in c.lower() for c in cmdline):
+                          logger.debug(f"MO2 process candidate PID={p.pid}, cmdline={cmdline!r}")'
           patch -p1 < ${./protontricks.patch}
         '';
 
