@@ -11,6 +11,15 @@ Currently, the `Mod manager download` button on Nexus doesn't work,
 but manual downloads work fine and are installable in MO2.
 Tested with Skyrim SE and SkyUI.
 
+### build & run
+
+This will not actually work until i contain some essential dependencies in the flake
+
+```bash
+nix build .#mo2-lint
+./result/bin/mo2-lint
+```
+
 > [!NOTE]
 > Consider this nothing more than a proof of concept. there's a lot wrong with my
 > (admittedly uninformed) approach. There's multiple "weird" substitutions during
