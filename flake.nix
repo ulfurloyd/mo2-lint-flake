@@ -37,5 +37,8 @@
         mo2-lint = mo2Lint;
         mo2-redirector = redirector;
       };
+      homeModules.default = import ./modules/home-module.nix {
+        package = mo2Lint;
+      };
     };
 }
