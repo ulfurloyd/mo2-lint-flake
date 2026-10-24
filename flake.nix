@@ -61,7 +61,7 @@
               '            cmdline = p.cmdline()
                       if any("modorganizer.exe" in c.lower() for c in cmdline):
                           logger.debug(f"MO2 process candidate PID={p.pid}, cmdline={cmdline!r}")'
-          patch -p1 < ${./protontricks.patch}
+          patch -p1 < ${./patches/protontricks.patch}
         '';
 
         dependencies = with python.pkgs; [
