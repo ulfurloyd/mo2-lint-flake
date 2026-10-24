@@ -115,6 +115,12 @@
 
           chmod +x $out/bin/mo2-lint
         '';
+
+        meta = {
+          description = "MO2-LINT packaged for NixOS";
+          license = pkgs.lib.licenses.gpl3;
+          platforms = [ "x86_64-linux" ];
+        };
       };
     };
 }

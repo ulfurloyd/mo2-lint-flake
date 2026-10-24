@@ -11,14 +11,24 @@ Currently, the `Mod manager download` button on Nexus doesn't work,
 but manual downloads work fine and are installable in MO2.
 Tested with Skyrim SE and SkyUI.
 
-### build & run
+### scope
 
-This will not actually work until i contain some essential dependencies in the flake
+The current flake targets x86_64-linux and uses Python 3.14 from nixpkgs.
+
+### build & run
 
 ```bash
 nix build .#mo2-lint
 ./result/bin/mo2-lint
 ```
+
+### upstream
+
+This repo packages upstream version 7.0.3 pinned to commit:
+`7be2fe2359953c9cdbb99eb47a297ab3e8ec504b`.
+
+The redirector at `assets/mo2-redirector.exe` is derived from the upstream redirector
+implementation.
 
 > [!NOTE]
 > Consider this nothing more than a proof of concept. there's a lot wrong with my
