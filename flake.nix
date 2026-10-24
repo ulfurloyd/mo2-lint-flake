@@ -265,5 +265,9 @@
         program = "${mo2Lint}/bin/mo2-lint";
         meta = mo2Lint.meta;
       };
+      overlays.default = final: prev: {
+        mo2-lint = mo2Lint;
+        mo2-redirector = redirector;
+      };
     };
 }
