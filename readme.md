@@ -85,6 +85,38 @@ Then add the package in `configuration.nix`:
 }
 ```
 
+### home manager module
+
+This flake provides a HM module to configure MO2-LINT's `settings.toml`.
+
+#### configure settings
+
+```nix
+programs.mo2-lint = {
+    enable = true;
+
+    settings = {
+        log_level = "info";
+        check_updates = true;
+        refresh_configs = true;
+    };
+
+    instance = {
+        launcher = "steam";
+        theme = "paper-dark";
+        plugins = [
+            "root-builder"
+            "auto-activator"
+        ];
+
+        folders = {
+            root_folder = "~/Games/mo2-lint";
+            folder_name = "mo2-{game}-{launcher}";
+        };
+    };
+};
+```
+
 ### upstream
 
 This repo packages upstream version 7.0.3 pinned to commit:
