@@ -260,5 +260,10 @@
         mo2-lint = mo2Lint;
         mo2-redirector = redirector;
       };
+      apps.${system}.default = {
+        type = "app";
+        program = "${mo2Lint}/bin/mo2-lint";
+        meta = mo2Lint.meta;
+      };
     };
 }
