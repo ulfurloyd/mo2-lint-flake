@@ -1,0 +1,12 @@
+--- a/src/mo2-lint/__init__.py
++++ b/src/mo2-lint/__init__.py
+@@ -177,7 +177,9 @@ def pull_config():
+     user = getuser()
+ 
+     try:
++        edit_file.unlink(missing_ok=True)
+         copy2(tweaks_file, edit_file)
++        edit_file.chmod(0o644)
+         txt = edit_file.read_text()
+         if user == "user":
+             logger.trace(

@@ -1,0 +1,10 @@
+--- a/src/mo2-lint/util/redirector/install.py
++++ b/src/mo2-lint/util/redirector/install.py
+@@ -69,6 +69,7 @@ def install():
+     logger.debug(f"Game install path: {game_install_path}")
+     logger.info(f"Installing redirector to: {redirector_path}")
+ 
++    redirector_path.chmod(redirector_path.stat().st_mode | stat.S_IWUSR) if redirector_path.exists() else None
+     copy2(redirector_build, redirector_path)
+     redirector_path.chmod(redirector_path.stat().st_mode | stat.S_IEXEC)
+     logger.success(f"Redirector installed to {redirector_path}")

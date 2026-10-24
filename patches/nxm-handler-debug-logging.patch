@@ -1,0 +1,11 @@
+--- a/src/nxm-handler/__init__.py
++++ b/src/nxm-handler/__init__.py
+@@ -108,6 +108,8 @@ def check_instance(instance_dir: Path) -> bool:
+     for p in psutil.process_iter():
+         try:
+             cmdline = p.cmdline()
++            if any("modorganizer.exe" in c.lower() for c in cmdline):
++                logger.debug(f"MO2 process candidate PID={p.pid}, cmdline={cmdline!r}")
+         except Exception:
+             continue
+         for c in cmdline:

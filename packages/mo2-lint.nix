@@ -36,31 +36,13 @@ python.pkgs.buildPythonApplication {
     python.pkgs.pyinstaller
   ];
 
-  postPatch = ''
-    substituteInPlace src/mo2-lint/__init__.py \
-      --replace-fail \
-        '        copy2(tweaks_file, edit_file)' \
-        '        edit_file.unlink(missing_ok=True)
-            copy2(tweaks_file, edit_file)
-            edit_file.chmod(0o644)'
-    substituteInPlace src/nxm-handler/__init__.py \
-      --replace-fail \
-        '            cmdline = p.cmdline()' \
-        '            cmdline = p.cmdline()
-                if any("modorganizer.exe" in c.lower() for c in cmdline):
-                    logger.debug(f"MO2 process candidate PID={p.pid}, cmdline={cmdline!r}")'
-    substituteInPlace src/mo2-lint/util/nexus/install_handler.py \
-      --replace-fail \
-        '        copy2(internal_path, output)' \
-        '        output.chmod(output.stat().st_mode | stat.S_IWUSR) if output.exists() else None
-            copy2(internal_path, output)'
-    substituteInPlace src/mo2-lint/util/redirector/install.py \
-      --replace-fail \
-        '    copy2(redirector_build, redirector_path)' \
-        '    redirector_path.chmod(redirector_path.stat().st_mode | stat.S_IWUSR) if redirector_path.exists() else None
-        copy2(redirector_build, redirector_path)'
-    patch -p1 < ${../patches/protontricks.patch}
-  '';
+  patches = [
+    ../patches/nexus-install-handler-permissions.patch
+    ../patches/nxm-handler-debug-logging.patch
+    ../patches/protontricks.patch
+    ../patches/redirector-install-permissions.patch
+    ../patches/tweaks-file-permissions.patch
+  ];
 
   dependencies = with python.pkgs; [
     certifi
