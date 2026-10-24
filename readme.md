@@ -23,6 +23,68 @@ nix build .#mo2-lint        # build the application
 ./result/bin/mo2-lint
 ```
 
+You can also run it directly with `nix run . -- <args>`.
+
+### NixOS integration
+
+Add the flake as an input in `flake.nix`:
+
+```nix
+{
+  inputs = {
+    mo2-lint = {
+      url = "github:ulfurloyd/mo2-lint-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+  outputs = { mo2-lint, ... }: {
+    nixosConfigurations.<hostname> = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        ./configuration.nix
+      ];
+    };
+  };
+}
+```
+
+#### without the overlay
+
+Add the package to `environment.systemPackages`:
+
+```nix
+{ inputs,  ... }: {
+  environment.systemPackages = [
+    inputs.mo2-lint.packages.${pkgs.system}.default
+  ];
+}
+```
+
+#### with the overlay
+
+Apply the overlay in your configuration:
+
+```nix
+modules = [
+  ({ ... }: {
+    nixpkgs.overlays = [
+      mo2-lint.overlays.default
+    ];
+  })
+  ./configuration.nix
+];
+```
+
+Then add the package in `configuration.nix`:
+
+```nix
+{ pkgs, ... }: {
+  environment.systemPackages = [
+    pkgs.mo2-lint
+  ];
+}
+```
+
 ### upstream
 
 This repo packages upstream version 7.0.3 pinned to commit:
