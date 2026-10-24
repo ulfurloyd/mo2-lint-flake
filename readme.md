@@ -18,7 +18,8 @@ The current flake targets x86_64-linux and uses Python 3.14 from nixpkgs.
 ### build & run
 
 ```bash
-nix build .#mo2-lint
+nix build .#mo2-redirector  # build the redirector
+nix build .#mo2-lint        # build the application
 ./result/bin/mo2-lint
 ```
 
@@ -27,13 +28,10 @@ nix build .#mo2-lint
 This repo packages upstream version 7.0.3 pinned to commit:
 `7be2fe2359953c9cdbb99eb47a297ab3e8ec504b`.
 
-The redirector at `assets/mo2-redirector.exe` is derived from the upstream redirector
-implementation.
-
 > [!NOTE]
 > Consider this nothing more than a proof of concept. there's a lot wrong with my
 > (admittedly uninformed) approach. There's multiple "weird" substitutions during
-> various build/patch phases, and I did not build the redirector in the flake.
-> This is my first time really working with nix and flakes beyond my NixOS system flake.
-> Regardless, as far as I can tell, this is the only attempt at creating a flake for
-> `mo2-lint` so I do plan on getting it to a more reliable spot at the very least.
+> various build/patch phases. This is my first time really working with nix and
+> flakes beyond my NixOS system flake. Regardless, as far as I can tell, this is the
+> only attempt at creating a flake for `mo2-lint` so I do plan on getting it to
+> a more reliable spot at the very least.
