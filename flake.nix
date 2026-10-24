@@ -185,6 +185,16 @@
                 '            cmdline = p.cmdline()
                         if any("modorganizer.exe" in c.lower() for c in cmdline):
                             logger.debug(f"MO2 process candidate PID={p.pid}, cmdline={cmdline!r}")'
+            substituteInPlace src/mo2-lint/util/nexus/install_handler.py \
+              --replace-fail \
+                '        copy2(internal_path, output)' \
+                '        output.chmod(output.stat().st_mode | stat.S_IWUSR) if output.exists() else None
+                    copy2(internal_path, output)'
+            substituteInPlace src/mo2-lint/util/redirector/install.py \
+              --replace-fail \
+                '    copy2(redirector_build, redirector_path)' \
+                '    redirector_path.chmod(redirector_path.stat().st_mode | stat.S_IWUSR) if redirector_path.exists() else None
+                copy2(redirector_build, redirector_path)'
             patch -p1 < ${./patches/protontricks.patch}
           '';
 
@@ -214,6 +224,7 @@
               pkgs.p7zip
               pkgs.cabextract
               pkgs.winetricks
+              pkgs.psmisc
             ])
           ];
 
