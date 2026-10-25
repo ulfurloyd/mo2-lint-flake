@@ -12,6 +12,7 @@ python.pkgs.buildPythonApplication {
   format = "other";
   dontBuild = false;
   dontStrip = true;
+  doCheck = true;
 
   buildPhase = ''
     runHook preBuild
@@ -35,6 +36,19 @@ python.pkgs.buildPythonApplication {
   nativeBuildInputs = [
     python.pkgs.pyinstaller
   ];
+
+  nativeCheckInputs = [
+    pkgs.protontricks
+  ];
+
+  checkPhase = ''
+    runHook preCheck
+
+    export PYTHONPATH="$PWD/src/mo2-lint:$PWD/src''${PYTHONPATH:+:$PYTHONPATH}"
+    ${python}/bin/python -m unittest discover -s tests -v
+
+    runHook postCheck
+  '';
 
   patches = [
     ../patches/nexus-install-handler-permissions.patch
