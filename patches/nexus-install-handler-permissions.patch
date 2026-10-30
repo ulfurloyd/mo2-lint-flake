@@ -1,9 +1,12 @@
 --- a/src/mo2-lint/util/nexus/install_handler.py
 +++ b/src/mo2-lint/util/nexus/install_handler.py
-@@ -28,6 +28,7 @@ def install():
+@@ -46,8 +46,10 @@ def install():
      else:
-         logger.trace(f"Installing NXM Handler to {output}")
+         logger.trace(f"Installing NXM Handler desktop entry to {output}")
          output.parent.mkdir(parents=True, exist_ok=True)
-+        output.chmod(output.stat().st_mode | stat.S_IWUSR) if output.exists() else None
++        if output.exists():
++            output.chmod(output.stat().st_mode | stat.S_IWUSR)
          copy2(internal_path, output)
-         output.chmod(output.stat().st_mode | stat.S_IEXEC)
+-        output.chmod(output.stat().st_mode | stat.S_IEXEC)
++        output.chmod(output.stat().st_mode | stat.S_IWUSR | stat.S_IXUSR)
+         mime = shutil.which("xdg-mime")
