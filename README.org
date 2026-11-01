@@ -1,16 +1,15 @@
 #+title: mo2-lint-flake
 
-Nix flake for [[https:github.com/Furglitch/modorganizer2-linux][modorganizer2-linux-installer]] 
+Nix flake for [[https://github.com/Furglitch/modorganizer2-linux-installer][modorganizer2-linux-installer]] 
 
 * status
 As of now, I've been able to run ~mo2-lint install ...~ to create a Skyrim Special
 Edition instance. It runs all the way through and finishes successfully. This took
-/various/ workaround I want to eventually get rid of.
+/various/ workarounds I want to eventually get rid of.
 
-Currently, the ~Mod manager download~ button on Nexus works, but it isn't able to
-find the currently running MO2 process and launches a new MO2 window instead.
-Manual downloads work fine and are installable in MO2.
-Tested with Skyrim SE and SkyUI.
+Currently, the ~Mod manager download~ button on Nexus works, and sends the download
+to the currently running MO2 process. Manual downloads also work fine and are
+installable in MO2. Tested with Skyrim SE.
 
 * scope
 
@@ -42,7 +41,7 @@ Add the flake as an input in ~flake.nix~:
 #+end_src
 
 - without the overlay
-  Add the package to your system/home packages.
+  Add the package ~mo2-lint.packages.x86_64-linux.default~ to your system/home packages.
 
 - with the overlay
   Apply the overlay in your configuration:
@@ -60,12 +59,16 @@ This flake provides an HM module to set options and set up the ~nxm-handler~.
 *** configure settings
 
 #+begin_src nix
+imports = [ mo2-lint.homeModules.default ];
+
 programs.mo2-lint = {
   enable = true;
   settings = {
-    log_level = "info";
-    check_updates = true;
-    refresh_configs = false;
+    installer = {
+      log_level = "info";
+      check_updates = false;
+      refresh_configs = false;
+    };
     instance = {
       launcher = "steam";
       theme = "paper-dark";
@@ -81,6 +84,129 @@ programs.mo2-lint = {
   };
 };
 #+end_src
+
+* nexus "mod manager download" links
+
+~mo2-lint~ (and the HM module) installs an ~nxm://~ handler. When you click
+the button, the handler forwards the link to the MO2 you started from Steam. For
+it to land in the /already running/ window instead of opening another one, all of
+these must hold:
+
+1. The instance is a *Steam* instance created or updated with this flake's package.
+   ~mo2-lint update <instance dir>~ regenerates the Steam compatibility tool that
+   enables Steam Runtime's launcher service.
+2. ~steam-run~ is on your =PATH=. The module option
+   ~programs.mo2-lint.nxmHandler.launcherService = true;~ installs ~steam-run-free~.
+3. The game was started from Steam after step 1.
+4. ~mo2-lint-nxm-handler~ is on the /session/ =PATH=, i.e. the package is
+   installed through ~home.packages~, ~environment.systemPackages~ or the module.
+   ~nix run~ alone is not enough for browser clicks.
+
+If any of these is missing, the handler falls back to the older behaviour: the
+download is still delivered, but a second MO2 window is started. The reason is
+logged to =~/.cache/mo2-lint/logs/nxm-handler.*.log=.
+
+/Why:/ Steam runs the game in a container with its own mount namespace. A Wine
+started from the host gets a separate wineserver, so MO2 can't see its own running
+instance, so MO2 can't see its own running instance. The patched handler
+asks Steam Runtime's launcher service to run =nxmhandler.exe= inside the game's
+container instead (see [[*patches and workarounds]]).
+
+* quick start
+
+#+begin_src shell
+mo2-lint list
+mo2-lint install
+mo2-lint update ~/Games/mo2-lint
+#+end_src
+
+- ~list~ shows instances ~mo2-lint~ knows about.
+- ~install~ creates a new instance interactively. See ~mo2-lint install --help~
+  for options (theme, plugins, Proton version, ...).
+- ~update~ is described under [[*updating]].
+
+  Prerequisites (game installed in Steam, etc.) are documented upstream.
+
+  Console output is very verbose. Full logs are in =~/.cache/mo2-lint/logs/=.
+
+** updating
+
+Two different things get "updated":
+
+- *This flake* (~nix flake update mo2-lint~ and a rebuild) changes the ~mo2-lint~ program in
+  the store. It doesn't touch the files ~mo2-lint~ alraedy copied into ~$HOME~ and your
+  Steam library (compat tool, redirector, nxm handler, ...)
+- ~mo2-lint update <instance dir>~ refreshes those copies and the instance itself.
+
+  #+begin_quote
+~mo2-lint update~ removes and re-adds the Steam compat tool, which makes it
+restart Steam. It also re-applies winetricks verbs and can take a couple of minutes.
+Close MO2 first.
+  #+end_quote
+
+If you use the home manager module, the nxm handler stub and its =.desktop= file are
+manager by home manager. The compat tool and the redirector are not; they only
+change when you run ~mo2-lint update~.
+
+** files it creates
+
+| path                                                         | what                                |
+|--------------------------------------------------------------+-------------------------------------|
+| =~/Games/mo2-lint/=                                          | the MO2 instance (configurable)     |
+| =~/.config/mo2-lint/=                                        | settings, state, downloaded configs |
+| =~/.cache/mo2-lint/logs/=                                    | logs                                |
+| =~/.local/share/mo2-lint/nxm-handler=                        | nxm handler (a small stub)          |
+| =~/.local/share/applications/mo2lint_nxm-handler.desktop=    | nxm handler registration            |
+| =~/.local/bin/wine2linux=                                    | helper copied by ~mo2-lint~         |
+| =<steam>/compatibilitytools.d/mo2_<appid>_proton_redirector= | Steam compatibility tool            |
+| =<game dir>/mo2-redirector.exe=                              | the redirector, see below           |
+
+** what is and isn't reproducible
+
+The /build/ is pinned: upstream's source is pinned to a commit, and Nix provides Python and the
+runtime tools (protontricks, winetricks, cabextract, ...)
+
+The /program/ is not hermetic. At runtime ~mo2-lint~ downloads what it needs, driven by config
+files under =~/.config/mo2-lint/=.
+
+* patches and workarounds
+
+Upstream is built with these changes (=patches/= and =packages/mo2-lint.nix=):
+
+| change                            | what it does                                                          |
+|-----------------------------------+-----------------------------------------------------------------------|
+| nexus-install-handler-permissions | makes an existing target writable before copying the handler          |
+| redirector-install-permissions    | same, for =mo2-redirector.exe= in the game directory                  |
+| tweaks-file-permissions           | deletes and recreates the working copy of =tweaks.reg= with mode 0644 |
+| protontricks                      | runs ~protontricks~ from =PATH=                                       |
+| nxm-handler-debug-logging         | logs candidate MO2 processes when looking for a running instance      |
+| nxm-launcher-service              | forwards nxm links through Steam's Runtime launcher service           |
+| proton-wrapper-launcher-service   | generated compat tool exports ~STEAM_COMPAT_LAUNCHER_SERVICE=proton~  |
+
+Not pataches, but also different from upstream:
+
+- ~nxm-handler~ is still a PyInstaller binary. The file the instance copies to
+  =~/.local/share/mo2-lint/nxm-handler= is a two-line stub that execs the real one wrapped with the right =PATH=
+  The home copy never goes stale and always runs with the tools it needs.
+- =bin/mo2-lint= is a small launcher script that runs upstream's source with the Nix Python and
+  a runtime =PATH=.
+
+Each patch is independend and will be dropped once it's no longer needed.
+
+* tested on
+
+| component    | version                                                |
+|--------------+--------------------------------------------------------|
+| OS           | NixOS, x86_64-linux (nixpkgs revision in =flake.lock=) |
+| home manager | TODO: check                                            |
+| Steam        | TODO: check, runtime SteamLinuxRuntime_4               |
+| Proton       | 11.0                                                   |
+| game         | Skyrim Special Edition (steam)                         |
+| MO2          | 2.5.2 (as installed by upstream 7.0.3)                 |
+| browsers     | Helium, Firefox (nxm links)                            |
+
+/Not tested:/ Epic, GOG and Heroic launchers, other games, aarch64. The launcher-service patch only affects
+the Steam code path.
 
 * upstream
 
