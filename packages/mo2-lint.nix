@@ -32,6 +32,7 @@ python.pkgs.buildPythonApplication {
   patches = [
     ../patches/nexus-install-handler-permissions.patch
     ../patches/nxm-handler-debug-logging.patch
+    ../patches/nxm-launcher-service.patch
     ../patches/protontricks.patch
     ../patches/redirector-install-permissions.patch
     ../patches/tweaks-file-permissions.patch

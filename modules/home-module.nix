@@ -26,10 +26,21 @@ in
       description = "The MO2-LINT package to install";
     };
 
-    nxmHandler.enable = mkOption {
-      type = types.bool;
-      default = true;
-      description = "Install the NXM handler and register it for nxm:// links declaratively.";
+    nxmHandler = {
+      enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Install the NXM handler and register it for nxm:// links declaratively.";
+      };
+      launcherService = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Install steam-run (unfree) so the NXM handler can forward links into the running
+          game's container, avoiding a second MO2 window. Requires
+          STEAM_COMPAT_LAUNCHER_SERVICE=proton in the game's Steam launch options.
+        '';
+      };
     };
 
     settings = {
@@ -91,7 +102,7 @@ in
 
   config = mkIf cfg.enable (lib.mkMerge [
     {
-      home.packages = [ cfg.package ];
+      home.packages = [ cfg.package ] ++ lib.optional cfg.nxmHandler.launcherService pkgs.steam-run;
 
       xdg.configFile."mo2-lint/settings.toml".source = tomlFormat.generate "mo2-lint-settings.toml" {
         inherit (cfg.settings) installer instance;

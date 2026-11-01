@@ -1,0 +1,113 @@
+diff --git a/src/nxm-handler/__init__.py b/src/nxm-handler/__init__.py
+index 4272529..2e2ff37 100755
+--- a/src/nxm-handler/__init__.py
++++ b/src/nxm-handler/__init__.py
+@@ -176,6 +176,99 @@ def wait_for_instance(instance_dir: Path, timeout: int = 60) -> bool:
+     logger.warning(f"Timed out waiting for Mod Organizer 2 to start after {timeout}s")
+     return False
+ 
++def _find_launch_client() -> list[str] | None:
++    """Locate steam-runtime-launch-cilent, prefixed with steam-run if present (NixOS)."""
++    import shutil
++
++    roots = []
++    if os.environ.get("STEAM_DIR"):
++        roots.append(Path(os.environ["STEAM_DIR"]))
++    home = Path.home()
++    roots += [
++        home / ".local/share/Steam",
++        home / "steam/steam",
++        home / ".var/app/com.valvesoftware.Steam/.local/share/Steam",
++    ]
++    pattern = "steamapps/common/SteamLinuxRuntime_*/pressure-vessel/bin/steam-runtime-launch-client"
++    for root in roots:
++        for client in sorted(root.glob(pattern)):
++            if client.is_file():
++                steam_run = shutil.which("steam-run")
++                return ([steam_run] if steam_run else []) + [str(client)]
++    return None
++
++
++def _host_env() -> dict[str, str]:
++    """Undo PyInstaller's LD_LIBRARY_PATH changes so host tools run normally."""
++    import sys
++
++    env = os.environ.copy()
++    for key in ("LD_LIBRARY_PATH", "LD_PRELOAD"):
++        orig = env.pop(f"{key}_ORIG", None)
++        if orig is not None:
++            env[key] = orig
++        elif getattr(sys, "frozen", False):
++            env.pop(key, None)
++    return env
++
++
++def _send_via_launcher_service(steam_id, handler: Path, url: str) -> bool:
++    """
++    Run nxmhandler.exe inside the game's own container, so it shares MO2's wineserver.
++    Returns True if the URL was handled (even if the command reported an error),
++    False if the caller should fall back to protontricks.
++    """
++    if not steam_id:
++        return False
++    base = _find_launch_client()
++    if base is None:
++        logger.debug("steam-runtime-launch-client not found; skipping launcher service.")
++        return False
++
++    cmd = base + [
++        f"--bus-name=com.steampowered.App{steam_id}",
++        "--",
++        "wine",
++        str(handler),
++        url,
++    ]
++    logger.debug(f"Forwarding via Steam launcher service: {cmd}")
++    try:
++        proc = subprocess.run(
++            cmd,
++            capture_output=True,
++            text=True,
++            check=False,
++            timeout=120,
++            env=_host_env(),
++        )
++    except subprocess.TimeoutExpired:
++        logger.warning("Launcher service command timed out; assuming it was delivered.")
++        return True
++    except OSError as e:
++        logger.debug(f"Could not run launch client: {e}")
++        return False
++
++    output = f"{proc.stdout or ''}{proc.stderr or ''}"
++    for line in output.splitlines():
++        logger.trace(f"launch-client: {line}")
++    if any(
++        marker in output
++        for marker in (
++            "Unable to connect",
++            "Can't find session bus",
++            "Could not start dynamically linked executable",
++        )
++    ):
++        logger.info(
++            "Steam launcher service unavailable (is STEAM_COMPAT_LAUNCHER_SERVICE=proton "
++            "in the game's launch options?). Falling back to protontricks."
++        )
++        return False
++    if proc.returncode != 0:
++        logger.warning(f"Launcher service command exited with code {proc.returncode}.")
++    return True
++
+ 
+ def send_url(instance_dir: Path, url: str, env_info: dict) -> None:
+     logger.info(f"Sending download {url} to running Mod Organizer 2 instance.")
+@@ -193,6 +286,8 @@ def send_url(instance_dir: Path, url: str, env_info: dict) -> None:
+     proton_version = env_info.get("proton_version")
+ 
+     if launcher == "steam":
++        if _send_via_launcher_service(steam_id, handler, url):
++            return
+         cmd = ["-c", f"wine '{handler}' '{url}'", str(steam_id)]
+         env = {}
+         if proton_version:
