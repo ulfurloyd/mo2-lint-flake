@@ -1,0 +1,97 @@
+#+title: mo2-lint-flake
+
+Nix flake for [[https:github.com/Furglitch/modorganizer2-linux][modorganizer2-linux-installer]] 
+
+* status
+As of now, I've been able to run ~mo2-lint install ...~ to create a Skyrim Special
+Edition instance. It runs all the way through and finishes successfully. This took
+/various/ workaround I want to eventually get rid of.
+
+Currently, the ~Mod manager download~ button on Nexus works, but it isn't able to
+find the currently running MO2 process and launches a new MO2 window instead.
+Manual downloads work fine and are installable in MO2.
+Tested with Skyrim SE and SkyUI.
+
+* scope
+
+The current flake targets x86_64-linux and uses Python 3.14 from nixpkgs.
+
+* build & run
+
+#+begin_src shell
+nix build .#mo2-redirector # optionally build the redirector
+nix build .#mo2-lint       # build the package
+./result/bin/mo2-lint
+#+end_src
+
+You can also run it directly with ~nix run . -- <args>~.
+
+* NixOS integration
+
+Add the flake as an input in ~flake.nix~:
+
+#+begin_src nix
+{
+  inputs.mo2-lint = {
+    url = "github:ulfurloyd/mo2-lint-flake";
+  };
+  outputs = { mo2-lint, ... }: { # pass mo2-lint as an output
+    ...
+  }
+}
+#+end_src
+
+- without the overlay
+  Add the package to your system/home packages.
+
+- with the overlay
+  Apply the overlay in your configuration:
+
+  #+begin_src nix
+nixpkgs.overlays = [
+  mo2-lint.overlays.default
+];
+  #+end_src
+
+** home manager module
+
+This flake provides an HM module to set options and set up the ~nxm-handler~.
+
+*** configure settings
+
+#+begin_src nix
+programs.mo2-lint = {
+  enable = true;
+  settings = {
+    log_level = "info";
+    check_updates = true;
+    refresh_configs = false;
+    instance = {
+      launcher = "steam";
+      theme = "paper-dark";
+      plugins = [
+        "root-builder"
+        "auto-activator"
+      ];
+      folders = {
+        root_folder = "~/Games/mo2-lint";
+        folder_name = "mo2-{game}";
+      };
+    };
+  };
+};
+#+end_src
+
+* upstream
+
+This repo packages upstream version 7.0.3 pinned to commit:
+=7be2fe2359953c9cdbb99eb47a297ab3e8ec504b=.
+
+#+begin_quote
+Consider this nothing more than a proof of concept. there's a lot wrong with my
+(admittedly uninformed) approach. There's multiple "weird" substitutions during
+various build/patch phases. This is my first time really working with nix and
+flakes beyond my NixOS system flake. Regardless, as far as I can tell, this is the
+only attempt at creating a flake for `mo2-lint` so I do plan on getting it to
+a more reliable spot at the very least.
+#+end_quote
