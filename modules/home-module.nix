@@ -26,7 +26,7 @@ in
       description = "The MO2-LINT package to install";
     };
 
-    nxmHandler.enable = {
+    nxmHandler.enable = mkOption {
       type = types.bool;
       default = true;
       description = "Install the NXM handler and register it for nxm:// links declaratively.";
