@@ -5,6 +5,21 @@
   redirector,
   ...
 }:
+let
+  runtimeBinPath = pkgs.lib.makeBinPath (
+    with pkgs;
+    [
+      protontricks
+      p7zip
+      cabextract
+      winetricks
+      psmisc
+      xdg-utils
+      desktop-file-utils
+      bubblewrap
+    ]
+  );
+in
 python.pkgs.buildPythonApplication {
   pname = "mo2-lint";
   version = "7.0.3";
@@ -13,6 +28,20 @@ python.pkgs.buildPythonApplication {
   dontBuild = false;
   dontStrip = true;
   doCheck = true;
+
+  patches = [
+    ../patches/nexus-install-handler-permissions.patch
+    ../patches/nxm-handler-debug-logging.patch
+    ../patches/protontricks.patch
+    ../patches/redirector-install-permissions.patch
+    ../patches/tweaks-file-permissions.patch
+  ];
+
+  postPatch = ''
+    substituteInPlace src/mo2-lint/util/nexus/install_handler.py \
+      --replace-fail "copy2(internal_path, output)" \
+                     "output.unlink(missing_ok=True); copy2(internal_path, output)"
+  '';
 
   buildPhase = ''
     runHook preBuild
@@ -35,6 +64,7 @@ python.pkgs.buildPythonApplication {
 
   nativeBuildInputs = [
     python.pkgs.pyinstaller
+    pkgs.makeWrapper
   ];
 
   nativeCheckInputs = [
@@ -49,14 +79,6 @@ python.pkgs.buildPythonApplication {
 
     runHook postCheck
   '';
-
-  patches = [
-    ../patches/nexus-install-handler-permissions.patch
-    ../patches/nxm-handler-debug-logging.patch
-    ../patches/protontricks.patch
-    ../patches/redirector-install-permissions.patch
-    ../patches/tweaks-file-permissions.patch
-  ];
 
   dependencies = with python.pkgs; [
     certifi
@@ -79,13 +101,7 @@ python.pkgs.buildPythonApplication {
     "--prefix"
     "PATH"
     ":"
-    (pkgs.lib.makeBinPath [
-      pkgs.protontricks
-      pkgs.p7zip
-      pkgs.cabextract
-      pkgs.winetricks
-      pkgs.psmisc
-    ])
+    runtimeBinPath
   ];
 
   installPhase = ''
@@ -97,6 +113,24 @@ python.pkgs.buildPythonApplication {
     install -Dm755 \
       ${redirector}/mo2-redirector.exe \
       $out/lib/mo2-lint/dist/mo2-redirector.exe
+
+    mkdir -p $out/libexec
+    mv $out/lib/mo2-lint/dist/nxm-handler $out/libexec/nxm-handler-bin
+    makeWrapper $out/libexec/nxm-handler-bin $out/bin/mo2-lint-nxm-handler \
+      --prefix PATH : ${runtimeBinPath}
+
+    cat > $out/lib/mo2-lint/dist/nxm-handler <<'STUB'
+    #!/bin/sh
+    PATH="$PATH:$HOME/.nix-profile/bin:/etc/profiles/per-user/$(id -un)/bin:/run/current-system/sw/bin"
+    if ! command -v mo2-lint-nxm-handler >/dev/null 2>&1; then
+      log="''${XDG_CACHE_HOME:-$HOME/.cache}/mo2-lint/logs/nxm-stub.log"
+      mkdir -p "$(dirname "$log")"
+      echo "$(date -Is) mo2-lint-nxm-handler not found; PATH=$PATH" >> "$log"
+      exit 127
+    fi
+    exec mo2-lint-nxm-handler "$@"
+    STUB
+    chmod +x $out/lib/mo2-lint/dist/nxm-handler
 
     cat > $out/bin/mo2-lint <<EOF
     #!${python}/bin/python3
