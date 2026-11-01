@@ -18,7 +18,7 @@ The current flake targets x86_64-linux and uses Python 3.14 from nixpkgs.
 * build & run
 
 #+begin_src shell
-nix build .#mo2-redirector # optionally build the redirector
+nix build .#mo2-redirector # build only the redirector
 nix build .#mo2-lint       # build the package
 ./result/bin/mo2-lint
 #+end_src
