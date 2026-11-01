@@ -36,6 +36,7 @@ python.pkgs.buildPythonApplication {
     ../patches/protontricks.patch
     ../patches/redirector-install-permissions.patch
     ../patches/tweaks-file-permissions.patch
+    ../patches/proton-wrapper-launcher-service.patch
   ];
 
   postPatch = ''

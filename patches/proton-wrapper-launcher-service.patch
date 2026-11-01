@@ -1,0 +1,15 @@
+diff --git a/src/steam-proton-wrapper/proton b/src/steam-proton-wrapper/proton
+index 48a760a..34d9c19 100755
+--- a/src/steam-proton-wrapper/proton
++++ b/src/steam-proton-wrapper/proton
+@@ -1,6 +1,10 @@
+ #!/usr/bin/env bash
+ set -euo pipefail
+ 
++# start the Steam Runtime launcher service so the NXM handler can forward
++# downloads into this container (avoids a second MO2 windw).
++export STEAM_COMPAT_LAUNCHER_SERVICE="${STEAM_COMPAT_LAUNCHER_SERVICE:-proton}"
++
+ if [[ -z "${STEAM_COMPAT_INSTALL_PATH:-}" ]]; then
+     printf 'Error: STEAM_COMPAT_INSTALL_PATH not set\n' >&2
+     exit 1
