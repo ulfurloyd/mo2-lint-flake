@@ -26,6 +26,12 @@ in
       description = "The MO2-LINT package to install";
     };
 
+    nxmHandler.enable = {
+      type = types.bool;
+      default = true;
+      description = "Install the NXM handler and register it for nxm:// links declaratively.";
+    };
+
     settings = {
       installer = {
         log_level = mkOption {
@@ -83,11 +89,33 @@ in
     };
   };
 
-  config = mkIf cfg.enable {
-    home.packages = [ cfg.package ];
+  config = mkIf cfg.enable (lib.mkMerge [
+    {
+      home.packages = [ cfg.package ];
 
-    xdg.configFile."mo2-lint/settings.toml".source = tomlFormat.generate "mo2-lint-settings.toml" {
-      inherit (cfg.settings) installer instance;
-    };
-  };
+      xdg.configFile."mo2-lint/settings.toml".source = tomlFormat.generate "mo2-lint-settings.toml" {
+        inherit (cfg.settings) installer instance;
+      };
+    }
+
+    (mkIf cfg.nxmHandler.enable {
+      xdg.dataFile."mo2-lint/nxm-handler" = {
+        source = "${cfg.package}/lib/mo2-lint/dist/nxm-handler";
+        force = true;
+      };
+      xdg.dataFile."applications/mo2lint_nxm-handler.desktop" = {
+        source = "${cfg.package}/lib/mo2-lint/configs/nxm-handler.desktop";
+        force = true;
+      };
+
+      xdg.mimeApps = {
+        enable = true;
+        defaultApplications."x-scheme-handler/nxm" = [ "mo2lint_nxm-handler.desktop" ];
+      };
+
+      home.activation.mo2LintDesktopDatabase = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+        run ${pkgs.desktop-file-utils}/bin/update-desktop-database ${config.xdg.dataHome}/applications
+      '';
+    })
+  ]);
 }
