@@ -2,6 +2,7 @@
   pkgs,
   python,
   src,
+  version,
   redirector,
   ...
 }:
@@ -22,8 +23,7 @@ let
 in
 python.pkgs.buildPythonApplication {
   pname = "mo2-lint";
-  version = "7.0.3";
-  inherit src;
+  inherit version src;
   format = "other";
   dontBuild = false;
   dontStrip = true;

@@ -1,4 +1,4 @@
-{ pkgs, src, ... }:
+{ pkgs, src, version, ... }:
 let
   redirectorPython = pkgs.fetchurl {
     url = "https://www.python.org/ftp/python/3.13.0/python-3.13.0-embed-amd64.zip";
@@ -54,8 +54,7 @@ let
 in
 pkgs.stdenvNoCC.mkDerivation {
   pname = "mo2-redirector";
-  version = "7.0.3";
-  inherit src;
+  inherit version src;
 
   nativeBuildInputs = [
     pkgs.wineWow64Packages.stable
