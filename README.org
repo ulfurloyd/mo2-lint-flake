@@ -226,7 +226,7 @@ Each patch is independend and will be dropped once it's no longer needed.
 | home manager | Tested                              |
 | Steam        | Tested, runtime SteamLinuxRuntime_4 |
 | Proton       | 11.0                                |
-| MO2-LINT     | 7.0.3                               |
+| MO2-LINT     | 7.0.5                               |
 | MO2          | 2.5.2                               |
 | game         | Skyrim SE, Cyberpunk 2077           |
 | browsers     | Helium, Firefox (NXM links)         |
@@ -236,5 +236,5 @@ the Steam code path.
 
 * upstream
 
-This repo packages upstream version 7.0.3 pinned to commit:
-=7be2fe2359953c9cdbb99eb47a297ab3e8ec504b=.
+This repo packages upstream version 7.0.5 pinned to commit:
+=427a6659c8c6c068ace49fc7d329f8b05cd0d9ed=.
