@@ -15,6 +15,9 @@ installable in MO2. Tested with Skyrim SE.
 
 The current flake targets x86_64-linux and uses Python 3.14 from nixpkgs.
 
+Only x86_64-linux and the Steam launcher path are supported. Upstream's arm64 support
+(including its in-process "protontricks bridge") is not packaged here.
+
 * build & run
 
 #+begin_src shell

@@ -1,4 +1,4 @@
-{ pkgs, src, ... }:
+{ lib, pkgs, src, version, ... }:
 let
   redirectorPython = pkgs.fetchurl {
     url = "https://www.python.org/ftp/python/3.13.0/python-3.13.0-embed-amd64.zip";
@@ -54,8 +54,7 @@ let
 in
 pkgs.stdenvNoCC.mkDerivation {
   pname = "mo2-redirector";
-  version = "7.0.3";
-  inherit src;
+  inherit version src;
 
   nativeBuildInputs = [
     pkgs.wineWow64Packages.stable
@@ -63,6 +62,7 @@ pkgs.stdenvNoCC.mkDerivation {
   ];
 
   dontConfigure = true;
+  dontFixup = true;
 
   buildPhase = ''
     runHook preBuild
@@ -105,6 +105,9 @@ pkgs.stdenvNoCC.mkDerivation {
 
     test -s dist/mo2-redirector.exe
 
+    # Stop the wineserver started by this build before the sandbox goes away.
+    wineserver -k || true
+
     runHook postBuild
   '';
 
@@ -115,9 +118,10 @@ pkgs.stdenvNoCC.mkDerivation {
     runHook postInstall
   '';
 
-  # Wine may otherwise attempt to contact its server after the build
-  # environment has been removed.
-  postInstall = ''
-    wineserver -k || true
-  '';
+  meta = {
+    description = "Windows launcher redirector for MO2-LINT (built under Wine)";
+    license = lib.licenses.gpl3Only;
+    platforms = [ "x86_64-linux" ];
+    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
+  };
 }

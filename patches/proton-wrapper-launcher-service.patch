@@ -7,7 +7,7 @@ index 48a760a..34d9c19 100755
  set -euo pipefail
  
 +# start the Steam Runtime launcher service so the NXM handler can forward
-+# downloads into this container (avoids a second MO2 windw).
++# downloads into this container (avoids a second MO2 window).
 +export STEAM_COMPAT_LAUNCHER_SERVICE="${STEAM_COMPAT_LAUNCHER_SERVICE:-proton}"
 +
  if [[ -z "${STEAM_COMPAT_INSTALL_PATH:-}" ]]; then

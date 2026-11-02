@@ -1,4 +1,4 @@
-{ package }:
+self:
 {
   config,
   lib,
@@ -11,7 +11,7 @@ let
     mkIf
     mkOption
     types
-    ;
+  ;
   cfg = config.programs.mo2-lint;
   tomlFormat = pkgs.formats.toml { };
 in
@@ -21,9 +21,12 @@ in
 
     package = mkOption {
       type = types.package;
-      default = package;
-      defaultText = lib.literalExpression "mo2-lint package from the flake";
-      description = "The MO2-LINT package to install";
+      default = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      defaultText = lib.literalMD "`mo2-lint.packages.<system>.default` from this flake";
+      description = '';
+        The MO2-LINT package to install. To build against your own nixpkgs, apply
+        `overlays.default` and set this to `pkgs.mo2-lint`.
+      '';
     };
 
     nxmHandler = {
@@ -46,9 +49,9 @@ in
     settings = {
       installer = {
         log_level = mkOption {
-          type = types.str;
+          type = types.enum [ "debug" "info" "trace" ];
           default = "info";
-          description = "Default log level when `--log-level` isn't provided. `INFO` if unset.";
+          description = "Default log level when `--log-level` isn't provided.";
         };
 
         check_updates = mkOption {
@@ -120,7 +123,7 @@ in
       };
 
       xdg.mimeApps = {
-        enable = true;
+        enable = lib.mkDefault true;
         defaultApplications."x-scheme-handler/nxm" = [ "mo2lint_nxm-handler.desktop" ];
       };
 

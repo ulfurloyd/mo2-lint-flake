@@ -1,12 +1,13 @@
 {
+  lib,
   pkgs,
   python,
   src,
+  version,
   redirector,
-  ...
 }:
 let
-  runtimeBinPath = pkgs.lib.makeBinPath (
+  runtimeBinPath = lib.makeBinPath (
     with pkgs;
     [
       protontricks
@@ -19,39 +20,69 @@ let
       bubblewrap
     ]
   );
+
+  # PyInstaller bundles protontricks from the store, so it must be built for
+  # the same Python as the handler.
+  protontricksSite = "${pkgs.protontricks}/${python.sitePackages}";
 in
 python.pkgs.buildPythonApplication {
   pname = "mo2-lint";
-  version = "7.0.3";
-  inherit src;
-  format = "other";
-  dontBuild = false;
+  inherit version src;
+  pyproject = false;
   dontStrip = true;
   doCheck = true;
 
   patches = [
-    ../patches/nexus-install-handler-permissions.patch
+    ../patches/store-copy-permissions.patch
     ../patches/nxm-handler-debug-logging.patch
     ../patches/nxm-launcher-service.patch
     ../patches/protontricks.patch
-    ../patches/redirector-install-permissions.patch
-    ../patches/tweaks-file-permissions.patch
     ../patches/proton-wrapper-launcher-service.patch
   ];
 
-  postPatch = ''
-    substituteInPlace src/mo2-lint/util/nexus/install_handler.py \
-      --replace-fail "copy2(internal_path, output)" \
-                     "output.unlink(missing_ok=True); copy2(internal_path, output)"
-  '';
+  nativeBuildInputs = [
+    python.pkgs.pyinstaller
+    pkgs.makeWrapper
+  ];
+
+  nativeCheckInputs = [ pkgs.protontricks ];
+
+  dependencies = with python.pkgs; [
+    certifi
+    click
+    inquirerpy
+    loguru
+    packaging
+    patool
+    pillow # needed by protontricks, which the handler bundles.
+    psutil # imported by the nxm handler, which is bundled at build time
+    pydantic-core # imported directly as pydantic_core; upstream's `pydantic` is not
+    pyyaml
+    requests
+    send2trash
+    vdf
+    websockets
+  ];
+
+  makeWrapperArgs = [
+    "--prefix"
+    "PATH"
+    ":"
+    runtimeBinPath
+  ];
 
   buildPhase = ''
     runHook preBuild
 
+    test -d "${protontricksSite}" || {
+      echo "protontricks is not built for ${python.libPrefix}; PyInstaller would miss it" >&2
+      exit 1
+    }
+
     pyinstaller --clean --noconfirm --onefile \
       --name nxm-handler \
       --paths src \
-      --paths ${pkgs.protontricks}/lib/python3.14/site-packages \
+      --paths ${protontricksSite} \
       --hidden-import find_heroic_install \
       --hidden-import protontricks \
       --hidden-import pydantic_core \
@@ -64,51 +95,24 @@ python.pkgs.buildPythonApplication {
     runHook postBuild
   '';
 
-  nativeBuildInputs = [
-    python.pkgs.pyinstaller
-    pkgs.makeWrapper
-  ];
-
-  nativeCheckInputs = [
-    pkgs.protontricks
-  ];
-
   checkPhase = ''
     runHook preCheck
 
     export PYTHONPATH="$PWD/src/mo2-lint:$PWD/src''${PYTHONPATH:+:$PYTHONPATH}"
-    ${python}/bin/python -m unittest discover -s tests -v
+    ${python.interpreter} -m unittest discover -s tests -v
 
     runHook postCheck
   '';
 
-  dependencies = with python.pkgs; [
-    certifi
-    click
-    inquirerpy
-    loguru
-    packaging
-    patool
-    pillow
-    psutil
-    pydantic-core
-    pyyaml
-    requests
-    send2trash
-    websockets
-    vdf
-  ];
-
-  makeWrapperArgs = [
-    "--prefix"
-    "PATH"
-    ":"
-    runtimeBinPath
-  ];
-
   installPhase = ''
+    runHook preInstall
+
     mkdir -p $out/lib/mo2-lint $out/bin
     cp -r . $out/lib/mo2-lint
+    # Build-only leftovers: PyInstaller's work directory (also holds the
+    # tracked hooks, already baked into the handler), its spec file, and tests
+    rm -rf $out/lib/mo2-lint/build $out/lib/mo2-lint/tests
+    rm -f $out/lib/mo2-lint/*.spec
     cp -r "$out/lib/mo2-lint/src/steam-proton-wrapper" \
       "$out/lib/mo2-lint/steam-proton-wrapper"
 
@@ -116,14 +120,27 @@ python.pkgs.buildPythonApplication {
       ${redirector}/mo2-redirector.exe \
       $out/lib/mo2-lint/dist/mo2-redirector.exe
 
+    # The real handler stays in the store, wrapped with the runtime PATH.
     mkdir -p $out/libexec
     mv $out/lib/mo2-lint/dist/nxm-handler $out/libexec/nxm-handler-bin
     makeWrapper $out/libexec/nxm-handler-bin $out/bin/mo2-lint-nxm-handler \
       --prefix PATH : ${runtimeBinPath}
 
+    # Upstream's installer copies dist/nxm-handler into ~/.local/share/mo2-lint/.
+    # Make that file a constant stub, so the home copy never goes stale.
     cat > $out/lib/mo2-lint/dist/nxm-handler <<'STUB'
     #!/bin/sh
-    PATH="$PATH:$HOME/.nix-profile/bin:/etc/profiles/per-user/$(id -un)/bin:/run/current-system/sw/bin"
+    # Browsers start this with a minimal environment: find the wrapped handler.
+    for d in "$HOME/.nix-profile/bin" \
+             "''${XDG_STATE_HOME:-$HOME/.local/state}/nix/profile/bin" \
+             "/etc/profiles/per-user/''${USER:-$(id -un 2>/dev/null)}/bin" \
+             /run/current-system/sw/bin; do
+      case ":$PATH:" in
+        *":$d:"*) ;;
+        *) PATH="$PATH:$d" ;;
+      esac
+    done
+    export PATH
     if ! command -v mo2-lint-nxm-handler >/dev/null 2>&1; then
       log="''${XDG_CACHE_HOME:-$HOME/.cache}/mo2-lint/logs/nxm-stub.log"
       mkdir -p "$(dirname "$log")"
@@ -135,7 +152,7 @@ python.pkgs.buildPythonApplication {
     chmod +x $out/lib/mo2-lint/dist/nxm-handler
 
     cat > $out/bin/mo2-lint <<EOF
-    #!${python}/bin/python3
+    #!${python.interpreter}
     import runpy
     import sys
 
@@ -143,13 +160,45 @@ python.pkgs.buildPythonApplication {
     sys.path.insert(0, "$out/lib/mo2-lint/src")
     runpy.run_path("$out/lib/mo2-lint/src/mo2-lint/__init__.py", run_name = "__main__")
     EOF
-
     chmod +x $out/bin/mo2-lint
+
+    runHook postInstall
+  '';
+
+  # pyproject = false skips the runtime-deps check, so verify imports by hand.
+  doInstallCheck = true;
+  installCheckPhase = ''
+    runHook preInstallCheck
+    ${python.interpreter} - <<'PY'
+    import importlib
+    for m in ["certifi", "click", "InquirerPy", "loguru", "packaging", "patoolib",
+              "PIL", "psutil", "pydantic_core", "requests", "send2trash",
+              "vdf", "websockets", "yaml"]:
+        importlib.import_module(m)
+
+    # Warn (never fail) if nixpkgs is older than upstream's declared minimums.
+    from importlib.metadata import version
+    from packaging.version import Version
+    minimums = {
+        "certifi": "2026.7.22", "click": "8.4.2", "inquirerpy": "0.3.4",
+        "loguru": "0.7.3", "patool": "4.0.5", "psutil": "7.1.3",
+        "pyyaml": "6.0.3", "requests": "2.34.2", "send2trash": "2.0.0",
+        "vdf": "3.4", "websockets": "17.0.1",
+    }
+    for name, minimum in minimums.items():
+        have = version(name)
+        if Version(have) < Version(minimum):
+            print(f"warning: {name} {have} is older than upstream's minimum {minimum}")
+    PY
+    runHook postInstallCheck
   '';
 
   meta = {
-    description = "MO2-LINT packaged for NixOS";
-    license = pkgs.lib.licenses.gpl3;
+    description = "Mod Organizer 2 installer for Linux (MO2-LINT)";
+    homepage = "https://github.com/Furglitch/modorganizer2-linux-installer";
+    # Check upstream: gpl3Only vs gpl3Plus (see commands below).
+    license = lib.licenses.gpl3Only;
+    mainProgram = "mo2-lint";
     platforms = [ "x86_64-linux" ];
   };
 }
