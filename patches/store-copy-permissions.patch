@@ -1,0 +1,53 @@
+diff --git a/src/mo2-lint/__init__.py b/src/mo2-lint/__init__.py
+index fcbd50e..8847eb5 100755
+--- a/src/mo2-lint/__init__.py
++++ b/src/mo2-lint/__init__.py
+@@ -177,7 +177,9 @@ def pull_config():
+     user = getuser()
+ 
+     try:
++        edit_file.unlink(missing_ok=True)
+         copy2(tweaks_file, edit_file)
++        edit_file.chmod(0o644)
+         txt = edit_file.read_text()
+         if user == "user":
+             logger.trace(
+diff --git a/src/mo2-lint/util/nexus/install_handler.py b/src/mo2-lint/util/nexus/install_handler.py
+index 8449f6f..d713025 100755
+--- a/src/mo2-lint/util/nexus/install_handler.py
++++ b/src/mo2-lint/util/nexus/install_handler.py
+@@ -28,8 +28,9 @@ def install():
+     else:
+         logger.trace(f"Installing NXM Handler to {output}")
+         output.parent.mkdir(parents=True, exist_ok=True)
++        output.unlink(missing_ok=True)
+         copy2(internal_path, output)
+-        output.chmod(output.stat().st_mode | stat.S_IEXEC)
++        output.chmod(0o755)
+ 
+     # Install desktop entry
+     output = Path(
+@@ -43,8 +44,9 @@ def install():
+     else:
+         logger.trace(f"Installing NXM Handler desktop entry to {output}")
+         output.parent.mkdir(parents=True, exist_ok=True)
++        output.unlink(missing_ok=True)
+         copy2(internal_path, output)
+-        output.chmod(output.stat().st_mode | stat.S_IEXEC)
++        output.chmod(0o755)
+         mime = shutil.which("xdg-mime")
+         if mime is None:
+             logger.warning(
+diff --git a/src/mo2-lint/util/redirector/install.py b/src/mo2-lint/util/redirector/install.py
+index fc5274c..bb7672f 100755
+--- a/src/mo2-lint/util/redirector/install.py
++++ b/src/mo2-lint/util/redirector/install.py
+@@ -69,6 +69,7 @@ def install():
+     logger.debug(f"Game install path: {game_install_path}")
+     logger.info(f"Installing redirector to: {redirector_path}")
+ 
++    redirector_path.unlink(missing_ok=True)
+     copy2(redirector_build, redirector_path)
+-    redirector_path.chmod(redirector_path.stat().st_mode | stat.S_IEXEC)
++    redirector_path.chmod(0o755)
+     logger.success(f"Redirector installed to {redirector_path}")

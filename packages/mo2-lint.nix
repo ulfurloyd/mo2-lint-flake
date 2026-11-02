@@ -30,20 +30,12 @@ python.pkgs.buildPythonApplication {
   doCheck = true;
 
   patches = [
-    ../patches/nexus-install-handler-permissions.patch
+    ../patches/store-copy-permissions.patch
     ../patches/nxm-handler-debug-logging.patch
     ../patches/nxm-launcher-service.patch
     ../patches/protontricks.patch
-    ../patches/redirector-install-permissions.patch
-    ../patches/tweaks-file-permissions.patch
     ../patches/proton-wrapper-launcher-service.patch
   ];
-
-  postPatch = ''
-    substituteInPlace src/mo2-lint/util/nexus/install_handler.py \
-      --replace-fail "copy2(internal_path, output)" \
-                     "output.unlink(missing_ok=True); copy2(internal_path, output)"
-  '';
 
   buildPhase = ''
     runHook preBuild
