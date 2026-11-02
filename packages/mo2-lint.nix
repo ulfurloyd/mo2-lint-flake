@@ -20,10 +20,6 @@ let
       bubblewrap
     ]
   );
-
-  # PyInstaller bundles protontricks from the store, so it must be built for
-  # the same Python as the handler.
-  protontricksSite = "${pkgs.protontricks}/${python.sitePackages}";
 in
 python.pkgs.buildPythonApplication {
   pname = "mo2-lint";
@@ -31,6 +27,7 @@ python.pkgs.buildPythonApplication {
   pyproject = false;
   dontStrip = true;
   doCheck = true;
+  patchFlags = [ "-p1" "--no-backup-if-mismatch" ];
 
   patches = [
     ../patches/store-copy-permissions.patch
@@ -43,6 +40,7 @@ python.pkgs.buildPythonApplication {
   nativeBuildInputs = [
     python.pkgs.pyinstaller
     pkgs.makeWrapper
+    pkgs.protontricks
   ];
 
   nativeCheckInputs = [ pkgs.protontricks ];
@@ -74,15 +72,14 @@ python.pkgs.buildPythonApplication {
   buildPhase = ''
     runHook preBuild
 
-    test -d "${protontricksSite}" || {
-      echo "protontricks is not built for ${python.libPrefix}; PyInstaller would miss it" >&2
+    ${python.interpreter} -c "import protontricks.cli.main" || {
+      echo "protontricks is not importable from ${python.libPrefix}: the handler would be bundled broken" >&2
       exit 1
     }
 
     pyinstaller --clean --noconfirm --onefile \
       --name nxm-handler \
       --paths src \
-      --paths ${protontricksSite} \
       --hidden-import find_heroic_install \
       --hidden-import protontricks \
       --hidden-import pydantic_core \
@@ -95,11 +92,31 @@ python.pkgs.buildPythonApplication {
     runHook postBuild
   '';
 
+  pythonImportsCheck = [
+    "certifi" "click" "InquirerPy" "loguru" "packaging" "patoolib" "PIL"
+    "psutil" "pydantic_core" "requests" "send2trash" "vdf" "websockets" "yaml"
+  ];
+
   checkPhase = ''
     runHook preCheck
 
     export PYTHONPATH="$PWD/src/mo2-lint:$PWD/src''${PYTHONPATH:+:$PYTHONPATH}"
     ${python.interpreter} -m unittest discover -s tests -v
+
+    ${python.interpreter} - <<'PY'
+    from importlib.metadata import version
+    from packaging.version import Version
+    minimums = {
+        "certifi": "2026.7.22", "click": "8.4.2", "inquirerpy": "0.3.4",
+        "loguru": "0.7.3", "patool": "4.0.5", "psutil": "7.1.3",
+        "pyyaml": "6.0.3", "requests": "2.34.2", "send2trash": "2.0.0",
+        "vdf": "3.4", "websockets": "17.0.1",
+                              }
+    for name, minimum in minimums.items():
+        have = version(name)
+        if Version(have) < Version(minimum):
+            print(f"warning: {name} {have} is older than upstream's minimum {minimum}")
+    PY
 
     runHook postCheck
   '';
@@ -163,34 +180,6 @@ python.pkgs.buildPythonApplication {
     chmod +x $out/bin/mo2-lint
 
     runHook postInstall
-  '';
-
-  # pyproject = false skips the runtime-deps check, so verify imports by hand.
-  doInstallCheck = true;
-  installCheckPhase = ''
-    runHook preInstallCheck
-    ${python.interpreter} - <<'PY'
-    import importlib
-    for m in ["certifi", "click", "InquirerPy", "loguru", "packaging", "patoolib",
-              "PIL", "psutil", "pydantic_core", "requests", "send2trash",
-              "vdf", "websockets", "yaml"]:
-        importlib.import_module(m)
-
-    # Warn (never fail) if nixpkgs is older than upstream's declared minimums.
-    from importlib.metadata import version
-    from packaging.version import Version
-    minimums = {
-        "certifi": "2026.7.22", "click": "8.4.2", "inquirerpy": "0.3.4",
-        "loguru": "0.7.3", "patool": "4.0.5", "psutil": "7.1.3",
-        "pyyaml": "6.0.3", "requests": "2.34.2", "send2trash": "2.0.0",
-        "vdf": "3.4", "websockets": "17.0.1",
-    }
-    for name, minimum in minimums.items():
-        have = version(name)
-        if Version(have) < Version(minimum):
-            print(f"warning: {name} {have} is older than upstream's minimum {minimum}")
-    PY
-    runHook postInstallCheck
   '';
 
   meta = {

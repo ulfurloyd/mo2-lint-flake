@@ -11,16 +11,16 @@ let
       hash = "sha256-UAvVjHv35YSoQ1rcy9djoLkY1cErCNdP9Q/XmykVRYs=";
     })
     (pkgs.fetchurl {
-      url = "https://files.pythonhosted.org/packages/8f/f1/3eee0263b487e571aed9204257b45bc2a0b6fec34d0a1adade4d8d8a968c/pyinstaller_hooks_contrib-2026.8-py3-none-any.whl";
-      hash = "sha256-bSHWUyPqRGd1Ovwh9S19DmlBaugQHdiCab8nOtSNsIQ=";
+      url  = "https://files.pythonhosted.org/packages/93/fe/ded0e20de0580257d97dbabb4db7ab4d96ad8ade7d41149e66308057cf52/pyinstaller_hooks_contrib-2026.9-py3-none-any.whl";
+      hash = "sha256-+z5n3WQSJWFyTEitA2asnowW5ji2O/fYXeA78/2/BsM=";
     })
     (pkgs.fetchurl {
       url = "https://files.pythonhosted.org/packages/a9/ba/000a1996d4308bc65120167c21241a3b205464a2e0b58deda26ae8ac21d1/altgraph-0.17.5-py2.py3-none-any.whl";
       hash = "sha256-86IkALzhsMcBaDggrE87FZzTAayrBnxRxlPgaWFgBZc=";
     })
     (pkgs.fetchurl {
-      url = "https://files.pythonhosted.org/packages/b7/b9/c538f279a4e237a006a2c98387d081e9eb060d203d8ed34467cc0f0b9b53/packaging-26.0-py3-none-any.whl";
-      hash = "sha256-s28f75M0pViLQWb4vNJqFOUh8rVea53jqqgNP/ejdSk=";
+      url  = "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl";
+      hash = "sha256-1xk/fI5Ok/RE/eAmK/kK8w4W+grQrUTLVTyHM5sjzRw=";
     })
     (pkgs.fetchurl {
       url = "https://files.pythonhosted.org/packages/54/16/12b82f791c7f50ddec566873d5bdd245baa1491bac11d15ffb98aecc8f8b/pefile-2024.8.26-py3-none-any.whl";
@@ -31,8 +31,8 @@ let
       hash = "sha256-ihUTN51wmXVVLSAtlC2YN3WJBcjQHrgri8wwkYkp57g=";
     })
     (pkgs.fetchurl {
-      url = "https://files.pythonhosted.org/packages/5d/40/e1e72872c6354b306daef1703549e8e83b4d43cfea356311bf722a043752/setuptools-83.0.0-py3-none-any.whl";
-      hash = "sha256-KbI8Ng8i9BTccza7OReMx7y/YCHtJzPN4XPwnboZq7M=";
+      url = "https://files.pythonhosted.org/packages/18/02/b4bbb90f8f29e334898ff45c6d9b1fffaa6f378017052b3023a06262b5f7/setuptools-84.1.0-py3-none-any.whl";
+      hash = "sha256-UjFonGrIFWzRVc+5jD/W+yUsPn6b09eLZNPFXxMmJMk=";
     })
     (pkgs.fetchurl {
       url = "https://files.pythonhosted.org/packages/97/c9/39d5b874e8b28845e4ec2202b5da735d0199dbe5b8fb85f91398814a9a46/pyyaml-6.0.3-cp313-cp313-win_amd64.whl";
