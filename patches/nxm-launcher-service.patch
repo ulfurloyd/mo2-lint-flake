@@ -7,7 +7,7 @@ index 4272529..2e2ff37 100755
      return False
  
 +def _find_launch_client() -> list[str] | None:
-+    """Locate steam-runtime-launch-cilent, prefixed with steam-run if present (NixOS)."""
++    """Locate steam-runtime-launch-client, prefixed with steam-run if present (NixOS)."""
 +    import shutil
 +
 +    roots = []
@@ -16,7 +16,7 @@ index 4272529..2e2ff37 100755
 +    home = Path.home()
 +    roots += [
 +        home / ".local/share/Steam",
-+        home / "steam/steam",
++        home / ".steam/steam",
 +        home / ".var/app/com.valvesoftware.Steam/.local/share/Steam",
 +    ]
 +    pattern = "steamapps/common/SteamLinuxRuntime_*/pressure-vessel/bin/steam-runtime-launch-client"
@@ -91,8 +91,8 @@ index 4272529..2e2ff37 100755
 +        )
 +    ):
 +        logger.info(
-+            "Steam launcher service unavailable (is STEAM_COMPAT_LAUNCHER_SERVICE=proton "
-+            "in the game's launch options?). Falling back to protontricks."
++            "Steam launcher service unavailable (reinstall the MO2 compatibility tool "
++            "with `mo2-lint update`, then restart the game). Falling back to protontricks."
 +        )
 +        return False
 +    if proc.returncode != 0:
