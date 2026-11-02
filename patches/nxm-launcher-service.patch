@@ -1,8 +1,8 @@
 diff --git a/src/nxm-handler/__init__.py b/src/nxm-handler/__init__.py
-index 4272529..2e2ff37 100755
+index 4272529..ecf4f57 100755
 --- a/src/nxm-handler/__init__.py
 +++ b/src/nxm-handler/__init__.py
-@@ -176,6 +176,99 @@ def wait_for_instance(instance_dir: Path, timeout: int = 60) -> bool:
+@@ -176,6 +176,97 @@ def wait_for_instance(instance_dir: Path, timeout: int = 60) -> bool:
      logger.warning(f"Timed out waiting for Mod Organizer 2 to start after {timeout}s")
      return False
  
@@ -82,16 +82,14 @@ index 4272529..2e2ff37 100755
 +    output = f"{proc.stdout or ''}{proc.stderr or ''}"
 +    for line in output.splitlines():
 +        logger.trace(f"launch-client: {line}")
-+    if any(
-+        marker in output
-+        for marker in (
-+            "Unable to connect",
-+            "Can't find session bus",
-+            "Could not start dynamically linked executable",
-+        )
-+    ):
++    unavailable = (
++        "Unable to connect",
++        "Can't find session bus",
++        "Could not start dynamically linked executable",
++    )
++    if proc.returncode in (126, 127) or any(m in output for m in unavailable):
 +        logger.info(
-+            "Steam launcher service unavailable (reinstall the MO2 compatibility tool "
++            "Steam launcher service not usable (reinstall the MO2 compatibility tool "
 +            "with `mo2-lint update`, then restart the game). Falling back to protontricks."
 +        )
 +        return False
@@ -102,7 +100,7 @@ index 4272529..2e2ff37 100755
  
  def send_url(instance_dir: Path, url: str, env_info: dict) -> None:
      logger.info(f"Sending download {url} to running Mod Organizer 2 instance.")
-@@ -193,6 +286,8 @@ def send_url(instance_dir: Path, url: str, env_info: dict) -> None:
+@@ -193,6 +284,8 @@ def send_url(instance_dir: Path, url: str, env_info: dict) -> None:
      proton_version = env_info.get("proton_version")
  
      if launcher == "steam":
