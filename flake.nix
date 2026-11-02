@@ -17,12 +17,12 @@
       overlays.default =
         final: _prev:
         let
-          version = "7.0.3";
+          version = "7.0.5";
           src = final.fetchFromGitHub {
             owner = "Furglitch";
             repo = "modorganizer2-linux-installer";
-            rev = "7be2fe2359953c9cdbb99eb47a297ab3e8ec504b";
-            hash = "sha256-qybjSUmfVjw9NrRFbPClKGOYvCT6llcoLJ6jK/59J34=";
+            rev = "427a6659c8c6c068ace49fc7d329f8b05cd0d9ed";
+            hash = "sha256-wFph+55t6aWIDM3axQN604b6pOL1vbtneaPjWabIzKA=";
           };
           redirector = final.callPackage ./packages/mo2-redirector.nix { inherit src version; };
         in
@@ -44,6 +44,7 @@
         default = {
           type = "app";
           program = "${pkgs.mo2-lint}/bin/mo2-lint";
+          meta.description = pkgs.mo2-lint.meta.description;
         };
       });
 

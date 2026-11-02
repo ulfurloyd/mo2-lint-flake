@@ -7,7 +7,7 @@ This project packages and builds components from the upstream
 project.
 
 - **Upstream repository:** https://github.com/Furglitch/modorganizer2-linux-installer
-- **Pinned revision:** `7be2fe2359953c9cdbb99eb47a297ab3e8ec504b`
+- **Pinned revision:** `427a6659c8c6c068ace49fc7d329f8b05cd0d9ed`
 - **Upstream license:** GNU General Public License v3.0 (GPL-3.0)
 
 The upstream license text is preserved in [`source/LICENSE`](source/LICENSE).

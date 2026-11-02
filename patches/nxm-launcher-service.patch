@@ -1,8 +1,8 @@
 diff --git a/src/nxm-handler/__init__.py b/src/nxm-handler/__init__.py
-index 4272529..ecf4f57 100755
+index bc13abf..7ef8ccf 100755
 --- a/src/nxm-handler/__init__.py
 +++ b/src/nxm-handler/__init__.py
-@@ -176,6 +176,97 @@ def wait_for_instance(instance_dir: Path, timeout: int = 60) -> bool:
+@@ -179,6 +179,97 @@ def wait_for_instance(instance_dir: Path, timeout: int = 60) -> bool:
      logger.warning(f"Timed out waiting for Mod Organizer 2 to start after {timeout}s")
      return False
  
@@ -100,12 +100,12 @@ index 4272529..ecf4f57 100755
  
  def send_url(instance_dir: Path, url: str, env_info: dict) -> None:
      logger.info(f"Sending download {url} to running Mod Organizer 2 instance.")
-@@ -193,6 +284,8 @@ def send_url(instance_dir: Path, url: str, env_info: dict) -> None:
+@@ -196,6 +287,8 @@ def send_url(instance_dir: Path, url: str, env_info: dict) -> None:
      proton_version = env_info.get("proton_version")
  
      if launcher == "steam":
 +        if _send_via_launcher_service(steam_id, handler, url):
 +            return
-         cmd = ["-c", f"wine '{handler}' '{url}'", str(steam_id)]
-         env = {}
-         if proton_version:
+         # protontricks -c runs this string through a shell, and the URL comes
+         # straight from the browser, so every argument must be shell-quoted.
+         cmd = [
