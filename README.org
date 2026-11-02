@@ -3,13 +3,23 @@
 Nix flake for [[https://github.com/Furglitch/modorganizer2-linux-installer][modorganizer2-linux-installer]] 
 
 * status
-As of now, I've been able to run ~mo2-lint install ...~ to create a Skyrim Special
-Edition instance. It runs all the way through and finishes successfully. This took
-/various/ workarounds I want to eventually get rid of.
+The flake is functional on NixOS (x86_64=linux) with Steam. I've successfully
+created, updated, and ran MO2-LINT instances for both Skyrim SE and Cyberpunk 2077.
 
-Currently, the ~Mod manager download~ button on Nexus works, and sends the download
-to the currently running MO2 process. Manual downloads also work fine and are
-installable in MO2. Tested with Skyrim SE.
+The following workflows have been tested:
+- Creating and updating MO2-LINT instances.
+- Launching games through Steam with MO2.
+- Installing mods through Nexus's =Mod manager download= button.
+- Manually downloading and installing mods.
+- Declarative NixOS/Home Manager integration, including NXM handler registration
+  and =settings.toml= content.
+
+The package utilizes several patches and workarounds for NixOS-specific runtime
+and filesystem behaviour. These are documented under [[*patches and workarounds]].
+
+This is still an evolving project. The build is reproducible, but MO2-LINT's
+runtime behaviour is not fully hermetic; it downloads dependencies and
+configuration files at runtime.
 
 * scope
 
@@ -17,6 +27,18 @@ The current flake targets x86_64-linux and uses Python 3.14 from nixpkgs.
 
 Only x86_64-linux and the Steam launcher path are supported. Upstream's arm64 support
 (including its in-process "protontricks bridge") is not packaged here.
+
+** game-specific considerations
+
+Some games require components to be installed directly into the game
+directory rather than managed by MO2.
+
+For 2077, RED4ext and Cyber Engine Tweaks (two common dependency mods) must be
+installed manually into the game directory when using MO2-LINT without an
+additional script-extender plugin. Other mods can remain managed by MO2.
+
+Refer to upstream's documentation [[https://docs.furglitch.com/modorganizer2-linux-installer][here]] for more details on games that require
+other workarounds or special handling.
 
 * build & run
 
@@ -198,15 +220,16 @@ Each patch is independend and will be dropped once it's no longer needed.
 
 * tested on
 
-| component    | version                                                |
-|--------------+--------------------------------------------------------|
-| OS           | NixOS, x86_64-linux (nixpkgs revision in =flake.lock=) |
-| home manager | TODO: check                                            |
-| Steam        | TODO: check, runtime SteamLinuxRuntime_4               |
-| Proton       | 11.0                                                   |
-| game         | Skyrim Special Edition (steam)                         |
-| MO2          | 2.5.2 (as installed by upstream 7.0.3)                 |
-| browsers     | Helium, Firefox (nxm links)                            |
+| component    | version                             |
+|--------------+-------------------------------------|
+| OS           | NixOS, x86_64-linux                 |
+| home manager | Tested                              |
+| Steam        | Tested, runtime SteamLinuxRuntime_4 |
+| Proton       | 11.0                                |
+| MO2-LINT     | 7.0.3                               |
+| MO2          | 2.5.2                               |
+| game         | Skyrim SE, Cyberpunk 2077           |
+| browsers     | Helium, Firefox (NXM links)         |
 
 /Not tested:/ Epic, GOG and Heroic launchers, other games, aarch64. The launcher-service patch only affects
 the Steam code path.
@@ -215,12 +238,3 @@ the Steam code path.
 
 This repo packages upstream version 7.0.3 pinned to commit:
 =7be2fe2359953c9cdbb99eb47a297ab3e8ec504b=.
-
-#+begin_quote
-Consider this nothing more than a proof of concept. there's a lot wrong with my
-(admittedly uninformed) approach. There's multiple "weird" substitutions during
-various build/patch phases. This is my first time really working with nix and
-flakes beyond my NixOS system flake. Regardless, as far as I can tell, this is the
-only attempt at creating a flake for `mo2-lint` so I do plan on getting it to
-a more reliable spot at the very least.
-#+end_quote
