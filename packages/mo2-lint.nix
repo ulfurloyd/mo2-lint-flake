@@ -54,14 +54,14 @@ python.pkgs.buildPythonApplication {
     loguru
     packaging
     patool
-    pillow
-    psutil
-    pydantic-core
+    pillow # needed by protontricks, which the handler bundles.
+    psutil # imported by the nxm handler, which is bundled at build time
+    pydantic-core # imported directly as pydantic_core; upstream's `pydantic` is not
     pyyaml
     requests
     send2trash
-    websockets
     vdf
+    websockets
   ];
 
   makeWrapperArgs = [
@@ -109,6 +109,10 @@ python.pkgs.buildPythonApplication {
 
     mkdir -p $out/lib/mo2-lint $out/bin
     cp -r . $out/lib/mo2-lint
+    # Build-only leftovers: PyInstaller's work directory (also holds the
+    # tracked hooks, already baked into the handler), its spec file, and tests
+    rm -rf $out/lib/mo2-lint/build $out/lib/mo2-lint/tests
+    rm -f $out/lib/mo2-lint/*.spec
     cp -r "$out/lib/mo2-lint/src/steam-proton-wrapper" \
       "$out/lib/mo2-lint/steam-proton-wrapper"
 
@@ -166,8 +170,25 @@ python.pkgs.buildPythonApplication {
   installCheckPhase = ''
     runHook preInstallCheck
     ${python.interpreter} - <<'PY'
-    import certifi, click, InquirerPy, loguru, packaging, patoolib, PIL
-    import psutil, pydantic_core, requests, send2trash, vdf, websockets, yaml
+    import importlib
+    for m in ["certifi", "click", "InquirerPy", "loguru", "packaging", "patoolib",
+              "PIL", "psutil", "pydantic_core", "requests", "send2trash",
+              "vdf", "websockets", "yaml"]:
+        importlib.import_module(m)
+
+    # Warn (never fail) if nixpkgs is older than upstream's declared minimums.
+    from importlib.metadata import version
+    from packaging.version import Version
+    minimums = {
+        "certifi": "2026.7.22", "click": "8.4.2", "inquirerpy": "0.3.4",
+        "loguru": "0.7.3", "patool": "4.0.5", "psutil": "7.1.3",
+        "pyyaml": "6.0.3", "requests": "2.34.2", "send2trash": "2.0.0",
+        "vdf": "3.4", "websockets": "17.0.1",
+    }
+    for name, minimum in minimums.items():
+        have = version(name)
+        if Version(have) < Version(minimum):
+            print(f"warning: {name} {have} is older than upstream's minimum {minimum}")
     PY
     runHook postInstallCheck
   '';
