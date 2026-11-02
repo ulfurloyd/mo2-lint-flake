@@ -71,6 +71,8 @@ pkgs.stdenvNoCC.mkDerivation {
     export WINEPREFIX="$TMPDIR/wineprefix"
     export WINEARCH=win64
     export WINEDEBUG=-all
+    export WINEDLLOVERRIDES="mscoree,mshtml="     # never try to fetch Mono or Gecko
+    export PYTHONHASHSEED=1                       # fixes hash-based ordering
     mkdir -p "$HOME"
 
     mkdir -p "$TMPDIR/python/Lib/site-packages"
@@ -101,6 +103,7 @@ pkgs.stdenvNoCC.mkDerivation {
       --hidden-import configparser \
       --add-data 'configs;cfg' \
       --add-data 'src/shared;src/shared' \
+      --icon .github/README/logo.ico \
       src/redirector/__init__.py
 
     test -s dist/mo2-redirector.exe
