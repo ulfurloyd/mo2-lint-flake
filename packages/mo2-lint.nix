@@ -27,7 +27,11 @@ python.pkgs.buildPythonApplication {
   pyproject = false;
   dontStrip = true;
   doCheck = true;
-  patchFlags = [ "-p1" "--no-backup-if-mismatch" ];
+  dontPatchELF = true;
+  patchFlags = [
+    "-p1"
+    "--no-backup-if-mismatch"
+  ];
 
   patches = [
     ../patches/store-copy-permissions.patch
