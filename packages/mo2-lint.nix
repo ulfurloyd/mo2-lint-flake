@@ -5,11 +5,10 @@
   src,
   version,
   redirector,
+  withSteamRun ? true,
 }:
 let
-  runtimeBinPath = lib.makeBinPath (
-    with pkgs;
-    [
+  runtimeDeps = with pkgs; [
       protontricks
       p7zip
       cabextract
@@ -18,8 +17,9 @@ let
       xdg-utils
       desktop-file-utils
       bubblewrap
-    ]
-  );
+  ];
+  runtimeBinPath = lib.makeBinPath runtimeDeps;
+  handlerBinPath = lib.makeBinPath (runtimeDeps ++ lib.optional withSteamRun pkgs.steam-run-free);
 in
 python.pkgs.buildPythonApplication {
   pname = "mo2-lint";
@@ -141,7 +141,7 @@ python.pkgs.buildPythonApplication {
     mkdir -p $out/libexec
     mv $out/lib/mo2-lint/dist/nxm-handler $out/libexec/nxm-handler-bin
     makeWrapper $out/libexec/nxm-handler-bin $out/bin/mo2-lint-nxm-handler \
-      --prefix PATH : ${runtimeBinPath}
+      --prefix PATH : ${handlerBinPath}
 
     # Upstream's installer copies dist/nxm-handler into ~/.local/share/mo2-lint/.
     # Make that file a constant stub, so the home copy never goes stale.

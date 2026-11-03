@@ -16,6 +16,13 @@ let
   tomlFormat = pkgs.formats.toml { };
 in
 {
+  imports = [
+    (lib.mkRemovedOptionModule
+      [ "programs" "mo2-lint" "nxmHandler" "launcherSerevice" ]
+      "steam-run-free is now bundled; use `package = pkgs.mo2-lint.override { withSteamRun = false; }` to opt out."
+    )
+  ];
+
   options.programs.mo2-lint = {
     enable = mkEnableOption "MO2-LINT";
 
@@ -34,15 +41,6 @@ in
         type = types.bool;
         default = true;
         description = "Install the NXM handler and register it for nxm:// links declaratively.";
-      };
-      launcherService = mkOption {
-        type = types.bool;
-        default = false;
-        description = ''
-          Install steam-run-free so the NXM handler can forward links into the running
-          game's container, avoiding a second MO2 window. Requires a Steam instance
-          created or updated by this package version (`mo2-lint update <dir>`).
-        '';
       };
     };
 
@@ -105,7 +103,7 @@ in
 
   config = mkIf cfg.enable (lib.mkMerge [
     {
-      home.packages = [ cfg.package ] ++ lib.optional cfg.nxmHandler.launcherService pkgs.steam-run-free;
+      home.packages = [ cfg.package ];
 
       xdg.configFile."mo2-lint/settings.toml".source = tomlFormat.generate "mo2-lint-settings.toml" {
         inherit (cfg.settings) installer instance;
