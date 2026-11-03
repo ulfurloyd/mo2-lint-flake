@@ -1,0 +1,30 @@
+name: CI
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 5 * * 1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+
+      - name: Check formatting
+        run: |
+          nix fmt
+          git diff --exit-code
+
+      - name: Check flake
+        run: nix flake check -L
+
+      - name: Build MO2-LINT
+        run: nix build .#mo2-lint -L
+
+      - name: Build redirector
+        run: nix build .#mo2-redirector -L
+
+      - name: Check redirector reproducibility
+        run: nix build .#mo2-redirector --rebuild -L
