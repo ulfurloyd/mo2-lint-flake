@@ -1,4 +1,10 @@
-{ lib, pkgs, src, version, ... }:
+{
+  lib,
+  pkgs,
+  src,
+  version,
+  ...
+}:
 let
   redirectorPython = pkgs.fetchurl {
     url = "https://www.python.org/ftp/python/3.13.0/python-3.13.0-embed-amd64.zip";
@@ -11,7 +17,7 @@ let
       hash = "sha256-UAvVjHv35YSoQ1rcy9djoLkY1cErCNdP9Q/XmykVRYs=";
     })
     (pkgs.fetchurl {
-      url  = "https://files.pythonhosted.org/packages/93/fe/ded0e20de0580257d97dbabb4db7ab4d96ad8ade7d41149e66308057cf52/pyinstaller_hooks_contrib-2026.9-py3-none-any.whl";
+      url = "https://files.pythonhosted.org/packages/93/fe/ded0e20de0580257d97dbabb4db7ab4d96ad8ade7d41149e66308057cf52/pyinstaller_hooks_contrib-2026.9-py3-none-any.whl";
       hash = "sha256-+z5n3WQSJWFyTEitA2asnowW5ji2O/fYXeA78/2/BsM=";
     })
     (pkgs.fetchurl {
@@ -19,7 +25,7 @@ let
       hash = "sha256-86IkALzhsMcBaDggrE87FZzTAayrBnxRxlPgaWFgBZc=";
     })
     (pkgs.fetchurl {
-      url  = "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl";
+      url = "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl";
       hash = "sha256-1xk/fI5Ok/RE/eAmK/kK8w4W+grQrUTLVTyHM5sjzRw=";
     })
     (pkgs.fetchurl {

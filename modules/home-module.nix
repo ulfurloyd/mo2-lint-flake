@@ -11,14 +11,13 @@ let
     mkIf
     mkOption
     types
-  ;
+    ;
   cfg = config.programs.mo2-lint;
   tomlFormat = pkgs.formats.toml { };
 in
 {
   imports = [
-    (lib.mkRemovedOptionModule
-      [ "programs" "mo2-lint" "nxmHandler" "launcherSerevice" ]
+    (lib.mkRemovedOptionModule [ "programs" "mo2-lint" "nxmHandler" "launcherSerevice" ]
       "steam-run-free is now bundled; use `package = pkgs.mo2-lint.override { withSteamRun = false; }` to opt out."
     )
   ];
@@ -30,9 +29,10 @@ in
       type = types.package;
       default = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
       defaultText = lib.literalMD "`mo2-lint.packages.<system>.default` from this flake";
-      description = '';
-        The MO2-LINT package to install. To build against your own nixpkgs, apply
-        `overlays.default` and set this to `pkgs.mo2-lint`.
+      description = ''
+        ;
+                The MO2-LINT package to install. To build against your own nixpkgs, apply
+                `overlays.default` and set this to `pkgs.mo2-lint`.
       '';
     };
 
@@ -47,7 +47,11 @@ in
     settings = {
       installer = {
         log_level = mkOption {
-          type = types.enum [ "debug" "info" "trace" ];
+          type = types.enum [
+            "debug"
+            "info"
+            "trace"
+          ];
           default = "info";
           description = "Default log level when `--log-level` isn't provided.";
         };
@@ -101,33 +105,35 @@ in
     };
   };
 
-  config = mkIf cfg.enable (lib.mkMerge [
-    {
-      home.packages = [ cfg.package ];
+  config = mkIf cfg.enable (
+    lib.mkMerge [
+      {
+        home.packages = [ cfg.package ];
 
-      xdg.configFile."mo2-lint/settings.toml".source = tomlFormat.generate "mo2-lint-settings.toml" {
-        inherit (cfg.settings) installer instance;
-      };
-    }
+        xdg.configFile."mo2-lint/settings.toml".source = tomlFormat.generate "mo2-lint-settings.toml" {
+          inherit (cfg.settings) installer instance;
+        };
+      }
 
-    (mkIf cfg.nxmHandler.enable {
-      xdg.dataFile."mo2-lint/nxm-handler" = {
-        source = "${cfg.package}/lib/mo2-lint/dist/nxm-handler";
-        force = true;
-      };
-      xdg.dataFile."applications/mo2lint_nxm-handler.desktop" = {
-        source = "${cfg.package}/lib/mo2-lint/configs/nxm-handler.desktop";
-        force = true;
-      };
+      (mkIf cfg.nxmHandler.enable {
+        xdg.dataFile."mo2-lint/nxm-handler" = {
+          source = "${cfg.package}/lib/mo2-lint/dist/nxm-handler";
+          force = true;
+        };
+        xdg.dataFile."applications/mo2lint_nxm-handler.desktop" = {
+          source = "${cfg.package}/lib/mo2-lint/configs/nxm-handler.desktop";
+          force = true;
+        };
 
-      xdg.mimeApps = {
-        enable = lib.mkDefault true;
-        defaultApplications."x-scheme-handler/nxm" = [ "mo2lint_nxm-handler.desktop" ];
-      };
+        xdg.mimeApps = {
+          enable = lib.mkDefault true;
+          defaultApplications."x-scheme-handler/nxm" = [ "mo2lint_nxm-handler.desktop" ];
+        };
 
-      home.activation.mo2LintDesktopDatabase = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-        run ${pkgs.desktop-file-utils}/bin/update-desktop-database ${config.xdg.dataHome}/applications
-      '';
-    })
-  ]);
+        home.activation.mo2LintDesktopDatabase = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+          run ${pkgs.desktop-file-utils}/bin/update-desktop-database ${config.xdg.dataHome}/applications
+        '';
+      })
+    ]
+  );
 }

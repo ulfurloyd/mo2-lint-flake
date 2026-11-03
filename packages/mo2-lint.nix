@@ -9,14 +9,14 @@
 }:
 let
   runtimeDeps = with pkgs; [
-      protontricks
-      p7zip
-      cabextract
-      winetricks
-      psmisc
-      xdg-utils
-      desktop-file-utils
-      bubblewrap
+    protontricks
+    p7zip
+    cabextract
+    winetricks
+    psmisc
+    xdg-utils
+    desktop-file-utils
+    bubblewrap
   ];
   runtimeBinPath = lib.makeBinPath runtimeDeps;
   handlerBinPath = lib.makeBinPath (runtimeDeps ++ lib.optional withSteamRun pkgs.steam-run-free);
@@ -97,8 +97,20 @@ python.pkgs.buildPythonApplication {
   '';
 
   pythonImportsCheck = [
-    "certifi" "click" "InquirerPy" "loguru" "packaging" "patoolib" "PIL"
-    "psutil" "pydantic_core" "requests" "send2trash" "vdf" "websockets" "yaml"
+    "certifi"
+    "click"
+    "InquirerPy"
+    "loguru"
+    "packaging"
+    "patoolib"
+    "PIL"
+    "psutil"
+    "pydantic_core"
+    "requests"
+    "send2trash"
+    "vdf"
+    "websockets"
+    "yaml"
   ];
 
   checkPhase = ''
