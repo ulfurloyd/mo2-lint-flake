@@ -53,6 +53,14 @@
           export HOME=$TMPDIR
           ${pkgs.mo2-lint}/bin/mo2-lint-nxm-handler --version > $out
         '';
+        # Fails `nix flake check` when the redirector wheels drift from upstream's uv.lock.
+        redirector-pins =
+          pkgs.runCommand "redirector-pins" { nativeBuildInputs = [ pkgs.python314 ]; }
+            ''
+              python3 ${./scripts/check-redirector-pins.py} \
+                ${pkgs.mo2-lint.src}/uv.lock ${./packages/mo2-redirector.nix}
+              touch $out
+            '';
       });
 
       homeModules.default = import ./modules/home-module.nix self;

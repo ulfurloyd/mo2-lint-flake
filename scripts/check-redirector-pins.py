@@ -5,8 +5,9 @@ import sys
 import tomllib
 from pathlib import Path
 
-nix = Path("packages/mo2-redirector.nix").read_text()
 lock_path = sys.argv[1] if len(sys.argv) > 1 else "source/uv.lock"
+nix_path = sys.argv[2] if len(sys.argv) > 2 else "packages/mo2-redirector.nix"
+nix = Path(nix_path).read_text()
 lock = tomllib.loads(Path(lock_path).read_text())
 locked = {p["name"]: p["version"] for p in lock["package"]}
 
