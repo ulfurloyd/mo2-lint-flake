@@ -164,7 +164,7 @@ mo2-lint update ~/Games/mo2-lint
 - ~list~ shows instances ~mo2-lint~ knows about.
 - ~install~ creates a new instance interactively. See ~mo2-lint install --help~
   for options (theme, plugins, Proton version, ...).
-- ~update~ is described under [[#updating]].
+- ~update~ is described under [[#updating][updating]].
 
   Prerequisites (game installed in Steam, etc.) are documented upstream.
 
