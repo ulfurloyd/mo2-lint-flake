@@ -44,6 +44,16 @@ in
       };
     };
 
+    manageConfigs = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        Link the package's bundled `*_info.yml` files into `~/.config/mo2-lint/` so they
+        always match the installed version. Requires `settings.installer.refresh_configs = false`,
+        because MO2-LINT would otherwise overwrite them from upstream's `main` branch.
+      '';
+    };
+
     settings = {
       installer = {
         log_level = mkOption {
@@ -58,13 +68,13 @@ in
 
         check_updates = mkOption {
           type = types.bool;
-          default = true;
+          default = false;
           description = "Set `false` to skip the startup GitHub version check.";
         };
 
         refresh_configs = mkOption {
           type = types.bool;
-          default = true;
+          default = false;
           description = "Set `false` to skip pulling remote config files on startup.";
         };
       };
@@ -133,6 +143,30 @@ in
         home.activation.mo2LintDesktopDatabase = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
           run ${pkgs.desktop-file-utils}/bin/update-desktop-database ${config.xdg.dataHome}/applications
         '';
+      })
+      (mkIf cfg.manageConfigs {
+        assertions = [
+          {
+            assertion = !cfg.settings.installer.refresh_configs;
+            message = "programs.mo2-lint: manageConfigs requires settings.installer.refresh_configs = false";
+          }
+        ];
+        xdg.configFile = lib.listToAttrs (
+          map
+            (f: {
+              name = "mo2-lint/${f}";
+              value = {
+                source = "${cfg.package}/lib/mo2-lint/configs/${f}";
+                force = true;
+              };
+            })
+            [
+              "game_info.yml"
+              "resource_info.yml"
+              "plugin_info.yml"
+              "theme_info.yml"
+            ]
+        );
       })
     ]
   );

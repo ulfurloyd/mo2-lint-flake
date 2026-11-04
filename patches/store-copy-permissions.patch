@@ -1,8 +1,33 @@
 diff --git a/src/mo2-lint/__init__.py b/src/mo2-lint/__init__.py
-index fcbd50e..8847eb5 100755
+index fcbd50e..3aa3c87 100755
 --- a/src/mo2-lint/__init__.py
 +++ b/src/mo2-lint/__init__.py
-@@ -177,7 +177,9 @@ def pull_config():
+@@ -72,6 +72,7 @@ def pull_config():
+             src = internal_file("cfg", "settings.toml")
+             settings_path.parent.mkdir(parents=True, exist_ok=True)
+             copy2(src, settings_path)
++            settings_path.chmod(0o644)
+             logger.trace(f"Copied src={src} to dest={settings_path}")
+         except Exception as e:
+             logger.exception(
+@@ -102,6 +103,7 @@ def pull_config():
+                 dest = config_path
+                 dest.parent.mkdir(parents=True, exist_ok=True)
+                 copy2(src, dest)
++                dest.chmod(0o644)
+                 logger.trace(f"Copied src={src} to dest={dest}")
+             except Exception as e:
+                 logger.exception(
+@@ -164,7 +166,7 @@ def pull_config():
+         try:
+             src = internal_file("cfg", "wine2linux")
+             copy2(src, wine2linux_path)
+-            wine2linux_path.chmod(wine2linux_path.stat().st_mode | 0o111)
++            wine2linux_path.chmod(0o755)
+             logger.debug(f"Installed wine2linux to {wine2linux_path}")
+         except Exception as e:
+             logger.exception(f"Failed to install wine2linux to {wine2linux_path}: {e}")
+@@ -177,7 +179,9 @@ def pull_config():
      user = getuser()
  
      try:
