@@ -31,7 +31,8 @@ The following workflows have been tested:
   and =settings.toml= content.
 
 The package utilizes several patches and workarounds for NixOS-specific runtime
-and filesystem behaviour. These are documented under [[*patches and workarounds]].
+and filesystem behaviour. These are documented under [[#patches-and-workarounds][patches and workarounds]].
+
 
 This is still an evolving project. The build is reproducible, but MO2-LINT's
 runtime behaviour is not fully hermetic; it downloads dependencies and
@@ -151,8 +152,7 @@ logged to =~/.cache/mo2-lint/logs/nxm-handler.*.log=.
 started from the host gets a separate wineserver, so MO2 can't see its own running
 instance, so MO2 can't see its own running instance. The patched handler
 asks Steam Runtime's launcher service to run =nxmhandler.exe= inside the game's
-container instead (see [[*patches and workarounds]]).
-
+container instead (see [[#patches-and-workarounds][patches and workarounds]])
 * quick start
 
 #+begin_src shell
@@ -164,7 +164,7 @@ mo2-lint update ~/Games/mo2-lint
 - ~list~ shows instances ~mo2-lint~ knows about.
 - ~install~ creates a new instance interactively. See ~mo2-lint install --help~
   for options (theme, plugins, Proton version, ...).
-- ~update~ is described under [[*updating]].
+- ~update~ is described under [[#updating]].
 
   Prerequisites (game installed in Steam, etc.) are documented upstream.
 
