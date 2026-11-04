@@ -2,6 +2,22 @@
 
 Nix flake for [[https://github.com/Furglitch/modorganizer2-linux-installer][modorganizer2-linux-installer]] 
 
+* toc :TOC:
+- [[#status][status]]
+- [[#scope][scope]]
+  - [[#game-specific-considerations][game-specific considerations]]
+- [[#build--run][build & run]]
+- [[#nixos-integration][NixOS integration]]
+  - [[#home-manager-module][home manager module]]
+- [[#nexus-mod-manager-download-links][nexus "mod manager download" links]]
+- [[#quick-start][quick start]]
+  - [[#updating][updating]]
+  - [[#files-it-creates][files it creates]]
+  - [[#what-is-and-isnt-reproducible][what is and isn't reproducible]]
+- [[#patches-and-workarounds][patches and workarounds]]
+- [[#tested-on][tested on]]
+- [[#upstream][upstream]]
+
 * status
 The flake is functional on NixOS (x86_64=linux) with Steam. I've successfully
 created, updated, and ran MO2-LINT instances for both Skyrim SE and Cyberpunk 2077.
