@@ -1,30 +1,34 @@
 name: CI
 on:
   push:
+    branches: [main]
   pull_request:
   schedule:
     - cron: "17 5 * * 1"
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
-
-      - name: Check formatting
-        run: |
+      - run: |
           nix fmt
           git diff --exit-code
+      - run: nix flake check -L
+      - run: nix build .#mo2-lint -L
+      - run: nix build .#mo2-redirector -L
+      - run: nix build .#mo2-redirector --rebuild -L
 
-      - name: Check flake
-        run: nix flake check -L
-
-      - name: Build MO2-LINT
-        run: nix build .#mo2-lint -L
-
-      - name: Build redirector
-        run: nix build .#mo2-redirector -L
-
-      - name: Check redirector reproducibility
-        run: nix build .#mo2-redirector --rebuild -L
+  latest-nixpkgs:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - run: nix flake update nixpkgs
+      - run: nix flake check -L
+      - run: nix build .#mo2-redirector -L && nix build .#mo2-redirector --rebuild -L
