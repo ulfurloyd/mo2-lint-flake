@@ -76,3 +76,31 @@ index fc5274c..bb7672f 100755
 -    redirector_path.chmod(redirector_path.stat().st_mode | stat.S_IEXEC)
 +    redirector_path.chmod(0o755)
      logger.success(f"Redirector installed to {redirector_path}")
+diff --git a/src/mo2-lint/util/theme/gtk_gen.py b/src/mo2-lint/util/theme/gtk_gen.py
+index 7caad3e..674c4c8 100644
+--- a/src/mo2-lint/util/theme/gtk_gen.py
++++ b/src/mo2-lint/util/theme/gtk_gen.py
+@@ -58,7 +58,9 @@ def _copy_font_file(font_name: str, output_dir: Path) -> None:
+     font_path = Path(font_file)
+     if font_path.is_file():
+         dest_path = output_dir / font_path.name
++        dest_path.unlink(missing_ok=True)
+         shutil.copy2(font_path, dest_path)
++        dest_path.chmod(0o644)
+         logger.debug(f"Copied font file: {font_path.name}")
+     else:
+         logger.debug(f"Font file for '{font_name}' not found. Please copy it manually.")
+diff --git a/src/mo2-lint/util/theme/kde_gen.py b/src/mo2-lint/util/theme/kde_gen.py
+index 88698c4..86334cd 100644
+--- a/src/mo2-lint/util/theme/kde_gen.py
++++ b/src/mo2-lint/util/theme/kde_gen.py
+@@ -67,7 +67,9 @@ def _copy_font_file(font_name: str, output_dir: Path) -> None:
+     font_path = Path(font_file)
+     if font_path.is_file():
+         dest_path = output_dir / font_path.name
++        dest_path.unlink(missing_ok=True)
+         shutil.copy2(font_path, dest_path)
++        dest_path.chmod(0o644)
+         logger.debug(f"Copied font file: {font_path.name}")
+     else:
+         logger.debug(f"Font file for '{font_name}' not found. Please copy it manually.")

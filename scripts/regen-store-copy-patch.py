@@ -55,3 +55,10 @@ sub("src/mo2-lint/__init__.py",
     "            wine2linux_path.chmod(wine2linux_path.stat().st_mode | 0o111)\n",
     "            copy2(src, wine2linux_path)\n"
     "            wine2linux_path.chmod(0o755)\n")
+
+for rel in ("src/mo2-lint/util/theme/gtk_gen.py", "src/mo2-lint/util/theme/kde_gen.py"):
+    sub(rel,
+        "        shutil.copy2(font_path, dest_path)\n",
+        "        dest_path.unlink(missing_ok=True)\n"
+        "        shutil.copy2(font_path, dest_path)\n"
+        "        dest_path.chmod(0o644)\n")

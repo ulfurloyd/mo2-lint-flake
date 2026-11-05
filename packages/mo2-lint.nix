@@ -17,6 +17,8 @@ let
     xdg-utils
     desktop-file-utils
     bubblewrap
+    fontconfig
+    procps
   ];
   runtimeBinPath = lib.makeBinPath runtimeDeps;
   handlerBinPath = lib.makeBinPath (runtimeDeps ++ lib.optional withSteamRun pkgs.steam-run-free);
