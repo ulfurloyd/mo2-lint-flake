@@ -70,6 +70,10 @@ pkgs.stdenvNoCC.mkDerivation {
   dontConfigure = true;
   dontFixup = true;
 
+  patches = [
+    ../patches/redirector-game-path.patch
+  ];
+
   buildPhase = ''
     runHook preBuild
 

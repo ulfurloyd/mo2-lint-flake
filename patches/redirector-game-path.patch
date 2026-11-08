@@ -1,0 +1,20 @@
+diff --git a/src/redirector/__init__.py b/src/redirector/__init__.py
+index 190d582..98c6c53 100755
+--- a/src/redirector/__init__.py
++++ b/src/redirector/__init__.py
+@@ -390,7 +390,14 @@ def main(argv: list[str]) -> int:
+             return 1
+ 
+         # Convert game install path to Wine format for the INI
+-        game_path_wine = posix_to_wine(game_path_posix) if game_path_posix else None
++        # update_mo2_ini writes this value verbatim and QSettings treats a single backslash
++        # as an escape (Z:\home becomes Z:ome), so double them, as install.py does via
++        # normalize_path.
++        game_path_wine = (
++            posix_to_wine(game_path_posix).replace("\\", "\\\\")
++            if game_path_posix
++            else None
++        )
+ 
+         # Update ModOrganizer.ini with launcher arguments and game metadata
+         if launcher_args and game_executable:
