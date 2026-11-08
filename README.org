@@ -15,6 +15,7 @@ Nix flake for [[https://github.com/Furglitch/modorganizer2-linux-installer][modo
   - [[#files-it-creates][files it creates]]
   - [[#what-is-and-isnt-reproducible][what is and isn't reproducible]]
 - [[#patches-and-workarounds][patches and workarounds]]
+- [[#heroic-support-experimental][heroic support (experimental)]]
 - [[#tested-on][tested on]]
 - [[#upstream][upstream]]
 
@@ -233,6 +234,17 @@ Not pataches, but also different from upstream:
   a runtime =PATH=.
 
 Each patch is independend and will be dropped once it's no longer needed.
+
+* heroic support (experimental)
+- Run ~mo2-lint install -L epic <dir>~ (use ~-L gog~ for GOG).
+- Restart Heroic yourself afterwards. The installer can't do that on NixOS.
+- The menu entry may disappear after a refresh, but the =Play= button still launches
+  MO2 because Heroic remembers the last chosen option. Run ~mo2-lint update <dir>~ to
+  bring the entry back.
+- NXM downloads through the browser don't reach MO2 for Heroic instances.
+  Download manually and install the archives from MO2.
+- The prefix configuration step doesn't run on NixOS (winetricks can't find Wine),
+  but that's harmless for MO2 itself.
 
 * tested on
 
