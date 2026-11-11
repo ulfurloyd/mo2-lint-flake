@@ -236,15 +236,17 @@ Not pataches, but also different from upstream:
 Each patch is independend and will be dropped once it's no longer needed.
 
 * heroic support (experimental)
-- Run ~mo2-lint install -L epic <dir>~ (use ~-L gog~ for GOG).
+Tested: Epic, Subnautica, nixpkgs ~heroic~, Proton 11.0. Not tested: GOG, Flatpak Heroic, other games.
+
+- ~mo2-lint install -L epic <game>~ adds a "Launch Mod Organizer" launch option to
+  Heroic, and installs MO2.
 - Restart Heroic yourself afterwards. The installer can't do that on NixOS.
-- The menu entry may disappear after a refresh, but the =Play= button still launches
-  MO2 because Heroic remembers the last chosen option. Run ~mo2-lint update <dir>~ to
-  bring the entry back.
-- NXM downloads through the browser don't reach MO2 for Heroic instances.
-  Download manually and install the archives from MO2.
-- The prefix configuration step doesn't run on NixOS (winetricks can't find Wine),
-  but that's harmless for MO2 itself.
+  Heroic may hide the launch option later, but "Play" keeps launching MO2.
+  ~mo2-lint update <dir>~ brings the entry back.
+- Prefix setup (winetricks) works on NixOS only through ~steam-run~; the VC++
+  runtimes and DLL overrides it should install do not run.
+- *NXM downloads do not reach MO2 for Heroic instances.* Download the archive manually and
+  install it from MO2.
 
 * tested on
 
