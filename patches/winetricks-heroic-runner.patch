@@ -1,0 +1,90 @@
+diff --git a/src/mo2-lint/util/wine/winetricks.py b/src/mo2-lint/util/wine/winetricks.py
+index 4633469..a6787bc 100755
+--- a/src/mo2-lint/util/wine/winetricks.py
++++ b/src/mo2-lint/util/wine/winetricks.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env python3
+ 
++import json
+ import os
+ import re
+ import shutil
+@@ -16,6 +17,49 @@ found_exec = Path(
+ )
+ 
+ 
++def _heroic_runner_bin(prefix: Path) -> Path | None:
++    """
++    Find the bin directory of the Wine/Proton build Heroic uses for the game that
++    owns this prefix. winetricks needs wine and wineserver from that same build.
++
++    Heroic keeps them per game in GamesConfig/<app>.json (winePrefix, wineVersion.bin).
++    Returns None if the prefix is not a Heroic game's, or nothing usable is found.
++    """
++    config_dirs = [
++        Path("~/.config/heroic").expanduser(),
++        Path("~/.var/app/com.heroicgameslauncher.hgl/config/heroic").expanduser(),
++    ]
++    for config_dir in config_dirs:
++        for config_json in sorted((config_dir / "GamesConfig").glob("*.json")):
++            try:
++                data = json.loads(config_json.read_text(encoding="utf-8"))
++            except (OSError, ValueError):
++                continue
++            if not isinstance(data, dict):
++                continue
++            for entry in data.values():
++                if not isinstance(entry, dict):
++                    continue
++                game_prefix = entry.get("winePrefix")
++                wine_bin = (entry.get("wineVersion") or {}).get("bin")
++                if not game_prefix or not wine_bin:
++                    continue
++                try:
++                    if Path(game_prefix).expanduser().resolve() != prefix:
++                        continue
++                except OSError:
++                    continue
++                wine_bin = Path(wine_bin)
++                if wine_bin.name == "proton":
++                    bin_dir = wine_bin.parent / "files" / "bin"
++                else:
++                    bin_dir = wine_bin.parent
++                if (bin_dir / "wine").exists() and (bin_dir / "wineserver").exists():
++                    logger.debug(f"Using Heroic runner from {bin_dir}")
++                    return bin_dir
++    return None
++
++
+ def run(
+     exec: Path | None = found_exec,
+     prefix: Path | None = None,
+@@ -56,13 +100,27 @@ def run(
+     env.setdefault("WINEPREFIX", str(prefix))
+     logger.trace(f"Using Wine prefix: {prefix}")
+ 
++    # winetricks finds wine and wineserver on PATH. For Heroic games they are the
++    # runner's own, and a downloaded runner is a generic Linux binary that NixOS
++    # can only start inside an FHS environment (steam-run).
++    launcher: list[str] = []
++    runner = _heroic_runner_bin(prefix)
++    if runner is not None:
++        env["PATH"] = f"{runner}:{env.get('PATH', '')}"
++        env["WINE"] = str(runner / "wine")
++        env["WINESERVER"] = str(runner / "wineserver")
++        steam_run = shutil.which("steam-run")
++        if steam_run and not str(runner).startswith("/nix/store/"):
++            launcher = [steam_run]
++            logger.debug("Running winetricks inside steam-run")
++
+     remove_loggers()
+     add_loggers(script="mo2-lint", process="winetricks")
+     output_lines = []
+ 
+     if cmd != [str(exec), "-q", "-f"]:
+         proc = subprocess.Popen(
+-            cmd,
++            launcher + cmd,
+             stdout=subprocess.PIPE,
+             stderr=subprocess.STDOUT,
+             text=True,

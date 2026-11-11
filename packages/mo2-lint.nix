@@ -19,6 +19,7 @@ let
     bubblewrap
     fontconfig
     procps
+    steam-run-free
   ];
   runtimeBinPath = lib.makeBinPath runtimeDeps;
   handlerBinPath = lib.makeBinPath (runtimeDeps ++ lib.optional withSteamRun pkgs.steam-run-free);
@@ -41,6 +42,7 @@ python.pkgs.buildPythonApplication {
     ../patches/nxm-launcher-service.patch
     ../patches/protontricks.patch
     ../patches/proton-wrapper-launcher-service.patch
+    ../patches/winetricks-heroic-runner.patch
   ];
 
   nativeBuildInputs = [
